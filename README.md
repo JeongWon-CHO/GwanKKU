@@ -1,36 +1,63 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 관꾸
 
-## Getting Started
+1인 셀프 장례 준비형 꾸미기 웹 서비스. 나만의 장례를 미리 꾸미고 기록하는 감성 경험을 제공합니다.
 
-First, run the development server:
+## 핵심 퍼널
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+```
+랜딩 → 성향 테스트 → 수호캐릭터 결과 → 꾸미기 대상 선택 → 에디터 → 완성 미리보기 / 저장 / 공유
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 기술 스택
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+| 항목       | 내용                    |
+| ---------- | ----------------------- |
+| 프레임워크 | Next.js 16 (App Router) |
+| 언어       | TypeScript              |
+| 스타일     | Tailwind CSS            |
+| 상태관리   | Zustand                 |
+| 애니메이션 | 추후 Framer Motion      |
+| PWA        | 추후 next-pwa           |
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 폴더 구조
 
-## Learn More
+```
+src/
+├── app/
+│   ├── page.tsx                   # 랜딩
+│   ├── test/
+│   │   ├── page.tsx               # 테스트 소개
+│   │   └── [step]/page.tsx        # 테스트 진행
+│   ├── result/page.tsx            # 수호캐릭터 결과
+│   ├── select/page.tsx            # 꾸미기 대상 선택
+│   ├── editor/page.tsx            # 관꾸 에디터
+│   └── complete/page.tsx          # 완성 미리보기 + 공유
+├── components/
+│   ├── ui/                        # 공통 UI
+│   ├── test/                      # 테스트 컴포넌트
+│   ├── guardian/                  # 수호캐릭터 컴포넌트
+│   └── editor/                    # 에디터 컴포넌트
+├── store/
+│   ├── useTestStore.ts
+│   └── useEditorStore.ts
+├── constants/
+│   ├── questions.ts
+│   ├── guardian-types.ts
+│   ├── editor-categories.ts
+│   └── editor-presets.ts
+├── types/
+│   ├── test.ts
+│   ├── guardian.ts
+│   └── editor.ts
+└── lib/
+    └── utils.ts
+```
 
-To learn more about Next.js, take a look at the following resources:
+## 실행 방법
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+npm install
+npm run dev
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+로컬 개발 서버: http://localhost:3000
