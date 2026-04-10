@@ -29,7 +29,7 @@ export function TestStepView({ step }: Props) {
     if (step < total) {
       router.push(`/test/${step + 1}`)
     } else {
-      router.push('/result')
+      router.push('/hatch')
     }
   }
 
