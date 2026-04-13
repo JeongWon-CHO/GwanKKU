@@ -1,29 +1,86 @@
 @import "tailwindcss";
 
+/* ═══════════════════════════════════════════════════════════
+    관꾸 디자인 토큰 — 온기 (Warm Rose-Stone)
+   ═══════════════════════════════════════════════════════════ */
+
+/* ── 라이트 모드 (기본) ──────────────────────────────────── */
 :root {
-  --background: #fafaf9;  /* stone-50 */
-  --foreground: #1c1917;  /* stone-900 */
-  --muted: #78716c;       /* stone-500 */
-  --subtle: #d6d3d1;      /* stone-300 */
+  /* Background */
+  --bg: #fafaf9; /* stone-50  — 따뜻한 오프화이트 */
+  --bg-surface: #f5f5f4; /* stone-100 — 카드/패널 */
+  --bg-inset: #e7e5e4; /* stone-200 — 입력창, 비활성 영역 */
+
+  /* Text */
+  --text-primary: #1c1917; /* stone-900 — 제목, 강조 */
+  --text-body: #44403c; /* stone-700 — 본문, 설명 (WCAG AA 통과) */
+  --text-caption: #78716c; /* stone-500 — 캡션, 플레이스홀더 */
+
+  /* Border */
+  --line: #e7e5e4; /* stone-200 — 기본 구분선 */
+  --line-strong: #a8a29e; /* stone-400 — 포커스/강조 테두리 */
+
+  /* Accent */
+  --accent: #9a6558; /* 더스티 로즈우드 — CTA, 선택 상태 */
+  --accent-fg: #ffffff; /* 악센트 위 텍스트 */
+
+  /* Status */
+  --status-error: #a85555;
+  --status-warning: #a07840;
+  --status-success: #5a7a5a;
 }
 
+/* ── 다크 모드 ───────────────────────────────────────────── */
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0c0a09;  /* stone-950 */
-    --foreground: #f5f5f4;  /* stone-100 */
-    --muted: #a8a29e;       /* stone-400 */
-    --subtle: #44403c;      /* stone-700 */
+    --bg: #1c1917; /* stone-900 — 따뜻한 다크 */
+    --bg-surface: #292524; /* stone-800 — 패널 */
+    --bg-inset: #141210; /* 더 어두운 인셋 */
+
+    --text-primary: #f5f5f4; /* stone-100 */
+    --text-body: #d6d3d1; /* stone-300 — 충분한 대비 */
+    --text-caption: #a8a29e; /* stone-400 */
+
+    --line: #3c3834; /* stone-750 근사 */
+    --line-strong: #78716c; /* stone-500 */
+
+    --accent: #c4907e; /* 라이트 로즈우드 */
+    --accent-fg: #1c1917; /* 다크 텍스트 on accent */
+
+    --status-error: #c08080;
+    --status-warning: #c0a060;
+    --status-success: #80a080;
   }
 }
 
+/* ── Tailwind v4 연결 ────────────────────────────────────── */
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-muted: var(--muted);
-  --color-subtle: var(--subtle);
+  /* 새 토큰 */
+  --color-background: var(--bg);
+  --color-surface: var(--bg-surface);
+  --color-inset: var(--bg-inset);
+
+  --color-primary: var(--text-primary);
+  --color-body: var(--text-body);
+  --color-caption: var(--text-caption);
+
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+
+  --color-accent: var(--accent);
+  --color-accent-fg: var(--accent-fg);
+
+  --color-error: var(--status-error);
+  --color-warning: var(--status-warning);
+  --color-success: var(--status-success);
+
+  /* 기존 클래스 호환 — 컴포넌트 수정 전까지 유지 */
+  --color-foreground: var(--text-primary); /* text-foreground */
+  --color-muted: var(--text-body); /* text-muted → stone-700로 개선 */
+  --color-subtle: var(--line); /* border-subtle, bg-subtle */
 }
 
 body {
-  background-color: var(--background);
-  color: var(--foreground);
+  background-color: var(--bg);
+  color: var(--text-primary);
 }

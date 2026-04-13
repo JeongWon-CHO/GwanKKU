@@ -1,68 +1,78 @@
-'use client'
+"use client";
 
-import { useRouter } from 'next/navigation'
-import { useState } from 'react'
-import Image from 'next/image'
-import { cn } from '@/lib/utils'
+import { useRouter } from "next/navigation";
+import { useRef, useState } from "react";
+import Image from "next/image";
+import { cn } from "@/lib/utils";
 
 // ── 이미지 교체 포인트 ────────────────────────────────────────────
 // 나중에 단계별 이미지가 생기면 아래 경로만 바꾸면 됨
 // 이미지가 없는 단계는 이전 단계 이미지를 유지하고, SVG 크랙 오버레이로 표현
 const EGG_IMAGES: Record<number, string> = {
-  0: '/images/egg/egg-stage-1.png', // 기본 알
-  1: '/images/egg/egg-stage-1.png', // 1클릭 후 → 추후 '/images/egg/egg-stage-2.png'
-  2: '/images/egg/egg-stage-1.png', // 2클릭 후 → 추후 '/images/egg/egg-stage-3.png'
-  3: '/images/egg/egg-stage-1.png', // 3클릭 후 → 추후 '/images/egg/egg-stage-4.png'
-}
+  0: "/images/egg/guardian-egg-base.png",    // 기본 알
+  1: "/images/egg/guardian-egg-crack-1.png", // 1클릭 후
+  2: "/images/egg/guardian-egg-crack-2.png", // 2클릭 후
+  3: "/images/egg/guardian-egg-crack-3.png", // 3클릭 후
+  4: "/images/egg/guardian-egg-crack-4.png", // 부화 직전 (burst 애니메이션 중)
+};
 
 const STAGE_HINTS: Record<number, string> = {
-  0: '두드려봐',
-  1: '조금 더...',
-  2: '금이 가고 있어...',
-  3: '거의 다 왔어...',
-}
+  0: "두드려봐",
+  1: "조금 더...",
+  2: "금이 가고 있어...",
+  3: "거의 다 왔어...",
+};
 
 // 클릭 횟수에 따른 shake 강도
 const SHAKE_CLASS: Record<number, string> = {
-  1: 'animate-hatch-shake-sm',
-  2: 'animate-hatch-shake-md',
-  3: 'animate-hatch-shake-lg',
-}
+  1: "animate-hatch-shake-sm",
+  2: "animate-hatch-shake-md",
+  3: "animate-hatch-shake-lg",
+};
 
-const TOTAL_CLICKS = 4
+const TOTAL_CLICKS = 4;
 
 export function HatchView() {
-  const router = useRouter()
-  const [clicks, setClicks] = useState(0)
-  const [shakeKey, setShakeKey] = useState(0)   // key 교체로 애니메이션 재트리거
-  const [activeShake, setActiveShake] = useState<number | null>(null)
-  const [isCompleting, setIsCompleting] = useState(false)
+  const router = useRouter();
+  const [clicks, setClicks] = useState(0);
+  const [shakeKey, setShakeKey] = useState(0); // key 교체로 애니메이션 재트리거
+  const [activeShake, setActiveShake] = useState<number | null>(null);
+  const [isCompleting, setIsCompleting] = useState(false);
+  // useState 기반 가드는 stale closure로 인해 빠른 연속 클릭을 막지 못함
+  // useRef는 항상 최신값을 읽으므로 리렌더 전에도 확실하게 차단됨
+  const isClickingRef = useRef(false);
 
   function handleTap() {
-    if (activeShake !== null || isCompleting) return
+    if (isClickingRef.current || isCompleting) return;
+    isClickingRef.current = true;
 
-    const next = clicks + 1
+    const next = clicks + 1;
 
     if (next >= TOTAL_CLICKS) {
-      setIsCompleting(true)
-      setTimeout(() => router.push('/result'), 900)
-      return
+      setIsCompleting(true);
+      setTimeout(() => router.push("/result"), 900);
+      return;
     }
 
-    setClicks(next)
-    setActiveShake(next)
-    setShakeKey((k) => k + 1)
-    // shake 지속 시간보다 약간 짧게 해제 (다음 클릭 허용)
-    setTimeout(() => setActiveShake(null), 450)
+    setClicks(next);
+    setActiveShake(next);
+    console.log(next);
+    setShakeKey((k) => k + 1);
+    setTimeout(() => {
+      setActiveShake(null);
+      isClickingRef.current = false;
+    }, 450);
   }
 
-  const imageSrc = EGG_IMAGES[Math.min(clicks, 3) as keyof typeof EGG_IMAGES]
+  const imageSrc = isCompleting
+    ? EGG_IMAGES[4]
+    : EGG_IMAGES[Math.min(clicks, 3) as keyof typeof EGG_IMAGES];
 
   const eggAnimClass = isCompleting
-    ? 'animate-hatch-burst'
+    ? "animate-hatch-burst"
     : activeShake !== null
-      ? (SHAKE_CLASS[activeShake] ?? '')
-      : ''
+      ? (SHAKE_CLASS[activeShake] ?? "")
+      : "";
 
   return (
     <>
@@ -127,7 +137,7 @@ export function HatchView() {
               className="animate-hatch-glow pointer-events-none absolute inset-0 rounded-full blur-3xl"
               style={{
                 background:
-                  'radial-gradient(circle, rgba(255,218,100,0.55) 0%, transparent 68%)',
+                  "radial-gradient(circle, rgba(255,218,100,0.55) 0%, transparent 68%)",
               }}
             />
           )}
@@ -135,7 +145,7 @@ export function HatchView() {
           {/* 알 이미지 + 크랙 오버레이 */}
           <div
             key={shakeKey}
-            className={cn('relative w-[200px] h-[240px]', eggAnimClass)}
+            className={cn("relative w-[200px] h-[240px]", eggAnimClass)}
           >
             <Image
               src={imageSrc}
@@ -149,48 +159,6 @@ export function HatchView() {
                 실제 금 간 이미지가 추가되면 이 블록을 제거하거나
                 이미지와 함께 유지해 레이어드 효과로 활용 가능
             ─────────────────────────────────────────────────────── */}
-            {clicks >= 2 && !isCompleting && (
-              <svg
-                aria-hidden
-                className="pointer-events-none absolute inset-0 h-full w-full"
-                viewBox="0 0 200 240"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                {/* 금 1: 상단 중앙 → 왼쪽 하단 */}
-                <path
-                  d="M100 58 L87 93 L76 119"
-                  stroke="rgba(0,0,0,0.22)"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                />
-                {/* 금 1 가지 */}
-                <path
-                  d="M87 93 L96 108"
-                  stroke="rgba(0,0,0,0.18)"
-                  strokeWidth="1"
-                  strokeLinecap="round"
-                />
-
-                {/* 금 2: 오른쪽 — clicks 3단계부터 표시 */}
-                {clicks >= 3 && (
-                  <>
-                    <path
-                      d="M113 68 L124 97 L132 120"
-                      stroke="rgba(0,0,0,0.22)"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                    />
-                    <path
-                      d="M124 97 L116 112"
-                      stroke="rgba(0,0,0,0.18)"
-                      strokeWidth="1"
-                      strokeLinecap="round"
-                    />
-                  </>
-                )}
-              </svg>
-            )}
           </div>
         </button>
 
@@ -200,8 +168,8 @@ export function HatchView() {
             <div
               key={i}
               className={cn(
-                'h-1.5 w-1.5 rounded-full transition-colors duration-300',
-                i < clicks ? 'bg-foreground' : 'bg-subtle',
+                "h-1.5 w-1.5 rounded-full transition-colors duration-300",
+                i < clicks ? "bg-primary" : "bg-inset",
               )}
             />
           ))}
@@ -209,11 +177,9 @@ export function HatchView() {
 
         {/* 단계 힌트 */}
         {!isCompleting && (
-          <p className="mt-4 text-sm text-muted">
-            {STAGE_HINTS[clicks]}
-          </p>
+          <p className="mt-4 text-sm text-body">{STAGE_HINTS[clicks]}</p>
         )}
       </main>
     </>
-  )
+  );
 }
