@@ -29,23 +29,23 @@ export function ResultView() {
     <main className="flex min-h-screen flex-col items-center justify-between px-6 py-16">
       <div className="flex flex-1 flex-col items-center justify-center gap-10 text-center">
         <div className="flex flex-col gap-2">
-          <p className="text-xs text-muted">당신의 수호캐릭터</p>
-          <h1 className="text-3xl font-semibold tracking-tight text-foreground">
+          <p className="text-xs text-body">당신의 수호캐릭터</p>
+          <h1 className="text-3xl font-semibold tracking-tight text-primary">
             {guardian.name}
           </h1>
         </div>
 
-        <p className="text-sm leading-relaxed text-muted">
+        <p className="text-sm leading-relaxed text-body">
           {guardian.description}
         </p>
 
-        <p className="text-base italic text-foreground">
+        <p className="text-base italic text-primary">
           &ldquo;{guardian.firstLine}&rdquo;
         </p>
 
         <Link
           href="/select"
-          className="mt-4 rounded-full bg-foreground px-8 py-3 text-sm font-medium text-background transition-opacity hover:opacity-80"
+          className="mt-4 rounded-full bg-primary px-8 py-3 text-sm font-medium text-background transition-opacity hover:opacity-80"
         >
           꾸미기 시작하기
         </Link>
@@ -53,7 +53,7 @@ export function ResultView() {
 
       <button
         onClick={() => router.push('/test')}
-        className="text-xs text-subtle hover:opacity-70"
+        className="text-xs text-caption hover:opacity-70"
       >
         다시 테스트하기
       </button>

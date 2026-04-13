@@ -169,7 +169,7 @@ export function HatchView() {
               key={i}
               className={cn(
                 "h-1.5 w-1.5 rounded-full transition-colors duration-300",
-                i < clicks ? "bg-foreground" : "bg-subtle",
+                i < clicks ? "bg-primary" : "bg-inset",
               )}
             />
           ))}
@@ -177,7 +177,7 @@ export function HatchView() {
 
         {/* 단계 힌트 */}
         {!isCompleting && (
-          <p className="mt-4 text-sm text-muted">{STAGE_HINTS[clicks]}</p>
+          <p className="mt-4 text-sm text-body">{STAGE_HINTS[clicks]}</p>
         )}
       </main>
     </>
