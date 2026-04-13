@@ -45,12 +45,12 @@ export function TestStepView({ step }: Props) {
     <main className="flex min-h-screen flex-col px-6 py-16">
       {/* 진행 바 */}
       <div className="mb-10 flex flex-col gap-2">
-        <div className="flex justify-between text-xs text-muted">
+        <div className="flex justify-between text-xs text-body">
           <span>{step} / {total}</span>
         </div>
-        <div className="h-1 w-full rounded-full bg-subtle">
+        <div className="h-1 w-full rounded-full bg-inset">
           <div
-            className="h-1 rounded-full bg-foreground transition-all"
+            className="h-1 rounded-full bg-primary transition-all"
             style={{ width: `${(step / total) * 100}%` }}
           />
         </div>
@@ -58,7 +58,7 @@ export function TestStepView({ step }: Props) {
 
       {/* 문항 */}
       <div className="flex flex-1 flex-col justify-between">
-        <p className="text-lg font-medium leading-snug text-foreground">
+        <p className="text-lg font-medium leading-snug text-primary">
           {question.text}
         </p>
 
@@ -71,8 +71,8 @@ export function TestStepView({ step }: Props) {
               className={cn(
                 'w-full rounded-2xl border px-5 py-4 text-left text-sm transition-colors',
                 selected === option.id
-                  ? 'border-foreground bg-foreground text-background'
-                  : 'border-subtle text-foreground hover:border-muted'
+                  ? 'border-primary bg-primary text-background'
+                  : 'border-line text-primary hover:border-line-strong'
               )}
             >
               {option.text}
@@ -84,7 +84,7 @@ export function TestStepView({ step }: Props) {
       {/* 뒤로가기 */}
       <button
         onClick={handleBack}
-        className="mt-10 text-xs text-subtle hover:opacity-70"
+        className="mt-10 text-xs text-caption hover:opacity-70"
       >
         이전으로
       </button>
