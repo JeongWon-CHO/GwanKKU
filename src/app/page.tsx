@@ -22,7 +22,7 @@ export default function LandingPage() {
 
         <Link
           href="/test"
-          className="mt-4 rounded-full bg-primary px-8 py-3 text-sm font-medium text-background transition-opacity hover:opacity-80"
+          className="mt-4 rounded-full bg-accent px-8 py-3 text-sm font-medium text-accent-fg transition-opacity hover:opacity-80"
         >
           죽음을 장식하러 가기
         </Link>
@@ -32,3 +32,19 @@ export default function LandingPage() {
     </main>
   );
 }
+
+// 컬러 토큰에 bg-primary가 없는데 저걸 쓰고 있다. 그래서 버튼쪽 css가 다 날라감
+/*  왜 접근되냐
+
+@theme inline에서
+
+--color-primary: var(--text-primary);
+
+를 선언했기 때문에, Tailwind 쪽에서 primary라는 컬러 토큰으로 인식해서
+bg-primary, text-primary, border-primary 같은 클래스가 만들어질 수 있다.
+
+즉, 없는 게 아니라 있긴 있음.
+다만 네가 의도한 primary가 배경용 대표색이 아니라 텍스트 대표색이라는 게 문제
+*/
+
+// 버튼용 디자인 토큰을 만들어야 될 듯

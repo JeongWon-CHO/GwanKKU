@@ -1,5 +1,6 @@
-import Link from 'next/link'
-import { QUESTIONS } from '@/constants/questions'
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
+import { QUESTIONS } from "@/constants/questions";
 
 export default function TestIntroPage() {
   return (
@@ -21,15 +22,19 @@ export default function TestIntroPage() {
 
         <Link
           href="/test/1"
-          className="rounded-full bg-primary px-8 py-3 text-sm font-medium text-background transition-opacity hover:opacity-80"
+          className="rounded-full bg-accent px-8 py-3 text-sm font-medium text-accent-fg transition-opacity hover:opacity-80"
         >
           시작하기
         </Link>
       </div>
 
-      <Link href="/" className="text-xs text-caption hover:opacity-70">
-        돌아가기
+      <Link
+        href="/"
+        className="flex items-center gap-1 border-b border-caption pb-px text-xs text-caption hover:opacity-70"
+      >
+        <ArrowLeft size={12} />
+        <div className="py-1">돌아가기</div>
       </Link>
     </main>
-  )
+  );
 }
