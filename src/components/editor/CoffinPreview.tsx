@@ -8,7 +8,7 @@ export function CoffinPreview({ preview }: Props) {
   const { backgroundColor, ribbonEmoji, stickerEmoji, message } = preview
 
   return (
-    <div className="relative flex flex-col items-center">
+    <div className="relative flex flex-col items-center py-2">
       {/* 관 형태 — hexagonal coffin (top-down lid view) */}
       <div
         className="relative flex flex-col items-center justify-between overflow-hidden transition-colors duration-300"
@@ -18,6 +18,7 @@ export function CoffinPreview({ preview }: Props) {
           backgroundColor,
           clipPath:
             'polygon(25% 0%, 75% 0%, 100% 15%, 100% 85%, 75% 100%, 25% 100%, 0% 85%, 0% 15%)',
+          filter: 'drop-shadow(0 8px 20px rgba(0, 0, 0, 0.10))',
         }}
       >
         {/* 리본/장식 — 상단 */}

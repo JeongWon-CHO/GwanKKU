@@ -26,7 +26,7 @@ export function OptionGrid({ items, selected, onSelect }: Props) {
                 className={cn(
                   'size-12 rounded-full border-2 transition-all',
                   isSelected
-                    ? 'border-accent scale-110 shadow-sm'
+                    ? 'scale-110 border-accent ring-2 ring-accent ring-offset-2'
                     : 'border-line',
                 )}
                 style={{ backgroundColor: item.value }}
@@ -52,7 +52,7 @@ export function OptionGrid({ items, selected, onSelect }: Props) {
             className={cn(
               'flex flex-col items-center gap-1.5 rounded-xl border py-3 transition-all',
               isSelected
-                ? 'border-accent bg-surface'
+                ? 'border-accent bg-accent/8'
                 : 'border-line hover:border-line-strong',
             )}
             aria-pressed={isSelected}

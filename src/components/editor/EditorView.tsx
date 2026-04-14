@@ -70,7 +70,10 @@ export function EditorView({ target }: Props) {
       </header>
 
       {/* 프리뷰 영역 */}
-      <section className="flex items-center justify-center bg-surface py-10">
+      <section className="flex flex-col items-center bg-surface py-8">
+        <p className="mb-5 text-xs text-caption">
+          나만의 {preset.objectLabel}을 꾸미는 중이에요
+        </p>
         <CoffinPreview preview={preview} />
       </section>
 
@@ -101,6 +104,9 @@ export function EditorView({ target }: Props) {
 
       {/* 하단 CTA — fixed */}
       <div className="fixed bottom-0 left-0 right-0 border-t border-line bg-background px-4 py-4">
+        <p className="mb-3 text-center text-xs text-caption">
+          완성하면 간직하거나 나눌 수 있어요
+        </p>
         <button
           onClick={() => router.push('/complete')}
           className="w-full rounded-2xl bg-accent py-4 text-base font-medium text-accent-fg transition-opacity active:opacity-80"
