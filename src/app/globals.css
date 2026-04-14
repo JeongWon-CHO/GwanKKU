@@ -21,7 +21,9 @@
   --line-strong: #a8a29e; /* stone-400 — 포커스/강조 테두리 */
 
   /* Accent */
-  --accent: #9a6558; /* 더스티 로즈우드 — CTA, 선택 상태 */
+  /* --accent: #7d5a50; 더스티 로즈우드 — CTA, 선택 상태 */
+  /* --accent: #c28285; 더스티 로즈 — CTA, 선택 상태 */
+  --accent: #885b5f; /* 더스티 로즈 — CTA, 선택 상태 */
   --accent-fg: #ffffff; /* 악센트 위 텍스트 */
 
   /* Status */

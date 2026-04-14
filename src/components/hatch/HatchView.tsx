@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 // 나중에 단계별 이미지가 생기면 아래 경로만 바꾸면 됨
 // 이미지가 없는 단계는 이전 단계 이미지를 유지하고, SVG 크랙 오버레이로 표현
 const EGG_IMAGES: Record<number, string> = {
-  0: "/images/egg/guardian-egg-base.png",    // 기본 알
+  0: "/images/egg/guardian-egg-base.png", // 기본 알
   1: "/images/egg/guardian-egg-crack-1.png", // 1클릭 후
   2: "/images/egg/guardian-egg-crack-2.png", // 2클릭 후
   3: "/images/egg/guardian-egg-crack-3.png", // 3클릭 후
@@ -169,7 +169,7 @@ export function HatchView() {
               key={i}
               className={cn(
                 "h-1.5 w-1.5 rounded-full transition-colors duration-300",
-                i < clicks ? "bg-primary" : "bg-inset",
+                i < clicks ? "bg-accent" : "bg-inset",
               )}
             />
           ))}
