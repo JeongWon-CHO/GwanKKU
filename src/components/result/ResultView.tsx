@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import Link from "next/link";
 import { useTestStore } from "@/store/useTestStore";
 import { calcGuardianType } from "@/lib/calcGuardianType";
@@ -35,13 +36,25 @@ export function ResultView() {
           </h1>
         </div>
 
-        <p className="text-sm leading-relaxed text-body">
-          {guardian.description}
-        </p>
+        <div className="flex flex-col items-center">
+          <p className="text-sm leading-relaxed text-body">
+            {guardian.description}
+          </p>
 
-        <p className="text-base italic text-primary">
-          &ldquo;{guardian.firstLine}&rdquo;
-        </p>
+          <div className="relative h-56 w-56">
+            <Image
+              src={guardian.imagePath}
+              alt={guardian.name}
+              fill
+              className="object-contain"
+              priority
+            />
+          </div>
+
+          <p className="text-base italic text-primary">
+            &ldquo;{guardian.firstLine}&rdquo;
+          </p>
+        </div>
 
         <Link
           href="/select"
