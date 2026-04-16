@@ -1,57 +1,73 @@
-'use client'
+"use client";
 
-import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { ArrowLeft } from 'lucide-react'
-import { useEditorStore } from '@/store/useEditorStore'
-import { EDITOR_PRESETS } from '@/constants/editor-presets'
-import { CoffinPreview } from './CoffinPreview'
-import { CategoryTabs } from './CategoryTabs'
-import { OptionGrid } from './OptionGrid'
-import type { EditorTarget, EditorCategoryId, PreviewState } from '@/types/editor'
+import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import { ArrowLeft } from "lucide-react";
+import { useEditorStore } from "@/store/useEditorStore";
+import { useTestStore } from "@/store/useTestStore";
+import { EDITOR_PRESETS } from "@/constants/editor-presets";
+import { GUARDIAN_TYPE_MAP } from "@/constants/guardian-types";
+import { calcGuardianType } from "@/lib/calcGuardianType";
+import { CoffinPreview } from "./CoffinPreview";
+import { CategoryTabs } from "./CategoryTabs";
+import { GuardianGuide } from "./GuardianGuide";
+import { OptionGrid } from "./OptionGrid";
+import type {
+  EditorTarget,
+  EditorCategoryId,
+  PreviewState,
+} from "@/types/editor";
 
-const DEFAULT_BACKGROUND = '#faf7f0'
-const MESSAGE_MAX_LENGTH = 30
+const DEFAULT_BACKGROUND = "#faf7f0";
+const MESSAGE_MAX_LENGTH = 30;
 
 type Props = {
-  target: EditorTarget
-}
+  target: EditorTarget;
+};
 
 export function EditorView({ target }: Props) {
-  const router = useRouter()
+  const router = useRouter();
   const { selections, message, setTarget, setSelection, setMessage } =
-    useEditorStore()
+    useEditorStore();
+  const { answers } = useTestStore();
 
-  const preset = EDITOR_PRESETS[target]
+  const preset = EDITOR_PRESETS[target];
   const [activeCategory, setActiveCategory] = useState<EditorCategoryId>(
-    preset.categories[0]?.id ?? 'background',
-  )
+    preset.categories[0]?.id ?? "background",
+  );
+
+  // 테스트 결과로부터 수호캐릭터 도출 (테스트 없이 직접 진입 시 null)
+  const guardian = useMemo(() => {
+    if (Object.keys(answers).length === 0) return null;
+    const key = calcGuardianType(answers);
+    return GUARDIAN_TYPE_MAP[key] ?? null;
+  }, [answers]);
 
   useEffect(() => {
-    setTarget(target)
-  }, [target, setTarget])
+    setTarget(target);
+  }, [target, setTarget]);
 
   // 선택된 itemId → 실제 값(color / emoji)으로 변환
   function resolveValue(
     categoryId: EditorCategoryId,
     fallback?: string,
   ): string | null {
-    const selectedId = selections[categoryId]
-    if (!selectedId) return fallback ?? null
-    const category = preset.categories.find((c) => c.id === categoryId)
-    const item = category?.items.find((i) => i.id === selectedId)
-    return item?.value ?? fallback ?? null
+    const selectedId = selections[categoryId];
+    if (!selectedId) return fallback ?? null;
+    const category = preset.categories.find((c) => c.id === categoryId);
+    const item = category?.items.find((i) => i.id === selectedId);
+    return item?.value ?? fallback ?? null;
   }
 
   const preview: PreviewState = {
-    backgroundColor: resolveValue('background', DEFAULT_BACKGROUND) as string,
-    ribbonEmoji: resolveValue('ribbon'),
-    stickerEmoji: resolveValue('sticker'),
+    backgroundColor: resolveValue("background", DEFAULT_BACKGROUND) as string,
+    ribbonEmoji: resolveValue("ribbon"),
+    stickerEmoji: resolveValue("sticker"),
     message,
-  }
+  };
 
   const activeItems =
-    preset.categories.find((c) => c.id === activeCategory)?.items ?? []
+    preset.categories.find((c) => c.id === activeCategory)?.items ?? [];
 
   return (
     <main className="flex min-h-screen flex-col">
@@ -77,8 +93,15 @@ export function EditorView({ target }: Props) {
         <CoffinPreview preview={preview} />
       </section>
 
+      {/* 수호캐릭터 가이드 row — 테스트 완료 후 진입한 경우에만 노출 */}
+      {guardian && (
+        <div className="px-4 py-3 border-b border-line bg-surface">
+          <GuardianGuide guardian={guardian} lines={guardian.editorLines} />
+        </div>
+      )}
+
       {/* 옵션 영역 */}
-      <section className="flex flex-1 flex-col px-4 pt-5 pb-32">
+      <section className="flex flex-1 flex-col px-4 pt-4 pb-32">
         <CategoryTabs
           categories={preset.categories}
           active={activeCategory}
@@ -86,7 +109,7 @@ export function EditorView({ target }: Props) {
         />
 
         <div className="mt-5">
-          {activeCategory === 'message' ? (
+          {activeCategory === "message" ? (
             <MessageInput
               value={message}
               onChange={setMessage}
@@ -108,22 +131,22 @@ export function EditorView({ target }: Props) {
           완성하면 간직하거나 나눌 수 있어요
         </p>
         <button
-          onClick={() => router.push('/complete')}
+          onClick={() => router.push("/complete")}
           className="w-full rounded-2xl bg-accent py-4 text-base font-medium text-accent-fg transition-opacity active:opacity-80"
         >
           완성 보기
         </button>
       </div>
     </main>
-  )
+  );
 }
 
 // ── 문구 입력 ─────────────────────────────────────────────
 type MessageInputProps = {
-  value: string
-  onChange: (value: string) => void
-  maxLength: number
-}
+  value: string;
+  onChange: (value: string) => void;
+  maxLength: number;
+};
 
 function MessageInput({ value, onChange, maxLength }: MessageInputProps) {
   return (
@@ -140,5 +163,5 @@ function MessageInput({ value, onChange, maxLength }: MessageInputProps) {
         {value.length} / {maxLength}
       </p>
     </div>
-  )
+  );
 }

@@ -54,6 +54,8 @@ export type GuardianType = {
   name: string          // 한글 타입명
   description: string   // 한 줄 설명 (결과 화면 노출)
   firstLine: string     // 수호캐릭터 첫 만남 대사 (결과 화면 노출)
+  imagePath: string     // public/images/guardians/{key}.png
+  editorLines: string[] // 에디터 화면 말풍선 순환 대사
   axes: GuardianAxes
   tone?: GuardianTone   // 말투 가이드 (현재 UI 미노출 — 추후 확장용)
 }
