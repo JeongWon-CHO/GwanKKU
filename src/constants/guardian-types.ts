@@ -7,11 +7,18 @@ import type { GuardianType } from '@/types/guardian'
 //   name        — 타입명 (결과 화면 노출)
 //   description — 한 줄 설명 (결과 화면 노출)
 //   firstLine   — 첫 만남 대사 (결과 화면 노출)
+//   imagePath   — 자동 부여: /images/guardians/{key}.png
+//                 파일명을 다르게 해야 할 경우 해당 항목에서 override
 //   axes        — 건드리지 않음 (계산 로직과 1:1 대응)
 //   tone        — 말투 가이드 메타데이터 (현재 UI 미노출)
+//
+// 이미지 파일 위치: public/images/guardians/{key}.png
+//   예) public/images/guardians/sunshine_mellow.png
 // ─────────────────────────────────────────────────────────────
 
-export const GUARDIAN_TYPES: GuardianType[] = [
+type GuardianTypeInput = Omit<GuardianType, 'imagePath'> & { imagePath?: string }
+
+const GUARDIAN_TYPES_RAW: GuardianTypeInput[] = [
   // ── Spotlight · Soft · Playful · Warm ───────────────────
   {
     key: 'sunshine_mellow',
@@ -27,6 +34,11 @@ export const GUARDIAN_TYPES: GuardianType[] = [
       keywords: ['좋다', '너답다', '사랑스럽다', '같이 해보자', '괜찮아'],
       avoid: '차갑고 딱딱한 말투, 지나치게 무게 잡는 톤',
     },
+    editorLines: [
+      '어울리는 색이 보이면 바로 말해줄게!',
+      '천천히 골라봐, 다 예쁠 거야.',
+      '네 취향대로 해도 충분해.',
+    ],
   },
 
   // ── Spotlight · Soft · Playful · Free ───────────────────
@@ -44,6 +56,11 @@ export const GUARDIAN_TYPES: GuardianType[] = [
       keywords: ['재밌다', '뻔하지 않다', '네 느낌', '딱이다', '가보자'],
       avoid: '지나치게 잔잔하거나 조심스러운 톤',
     },
+    editorLines: [
+      '뻔한 건 건너뛰어도 돼.',
+      '딱 네 느낌으로 가자!',
+      '이거 재밌지 않아?',
+    ],
   },
 
   // ── Spotlight · Soft · Calm · Warm ──────────────────────
@@ -61,6 +78,11 @@ export const GUARDIAN_TYPES: GuardianType[] = [
       keywords: ['안심해도 돼', '충분해', '따뜻하다', '편안하다', '천천히'],
       avoid: '과한 장난기, 너무 쿨한 톤',
     },
+    editorLines: [
+      '안심해도 돼, 천천히 골라봐.',
+      '네가 좋아할 분위기, 같이 찾아볼게.',
+      '충분히 잘하고 있어.',
+    ],
   },
 
   // ── Spotlight · Soft · Calm · Free ──────────────────────
@@ -78,6 +100,11 @@ export const GUARDIAN_TYPES: GuardianType[] = [
       keywords: ['네 결', '네 분위기', '억지로 안 해도 돼', '지켜줄게'],
       avoid: '과한 리액션, 가볍고 유치한 톤',
     },
+    editorLines: [
+      '네 결이 보여. 그대로 가도 돼.',
+      '억지로 고르지 않아도 괜찮아.',
+      '뭘 골라도 네 분위기가 남을 거야.',
+    ],
   },
 
   // ── Spotlight · Strong · Playful · Warm ─────────────────
@@ -95,6 +122,11 @@ export const GUARDIAN_TYPES: GuardianType[] = [
       keywords: ['잘 왔어', '괜찮아', '이대로 가도 돼', '내가 같이 갈게'],
       avoid: '우유부단한 표현, 지나친 감성 과몰입',
     },
+    editorLines: [
+      '이대로 가도 돼, 내가 옆에 있어.',
+      '망설이지 마, 잘 어울릴 거야.',
+      '잘하고 있어.',
+    ],
   },
 
   // ── Spotlight · Strong · Playful · Free ─────────────────
@@ -112,6 +144,11 @@ export const GUARDIAN_TYPES: GuardianType[] = [
       keywords: ['좋아', '이거다', '튀어도 돼', '원래 네 거야', '가자'],
       avoid: '지나치게 조심스럽거나 소극적인 표현',
     },
+    editorLines: [
+      '튀어도 괜찮아, 원래 네 거야.',
+      '이거다, 바로 이 느낌.',
+      '뻔하지 않아서 좋은데?',
+    ],
   },
 
   // ── Spotlight · Strong · Calm · Warm ────────────────────
@@ -129,6 +166,11 @@ export const GUARDIAN_TYPES: GuardianType[] = [
       keywords: ['좋아', '잘 어울린다', '차갑지 않다', '편안하다', '정리된다'],
       avoid: '너무 들뜬 말투, 과한 장난기',
     },
+    editorLines: [
+      '천천히 와도 괜찮아.',
+      '잘 어울린다, 그대로 가봐.',
+      '편안한 쪽으로 골라봐.',
+    ],
   },
 
   // ── Spotlight · Strong · Calm · Free ────────────────────
@@ -146,6 +188,11 @@ export const GUARDIAN_TYPES: GuardianType[] = [
       keywords: ['이제 네 차례야', '눈에 띄어도 돼', '또렷하다', '분명하다'],
       avoid: '소심하고 머뭇거리는 말투',
     },
+    editorLines: [
+      '이제 네 차례야.',
+      '눈에 띄어도 괜찮아.',
+      '또렷하게 가자.',
+    ],
   },
 
   // ── Moonlight · Soft · Playful · Warm ───────────────────
@@ -163,6 +210,11 @@ export const GUARDIAN_TYPES: GuardianType[] = [
       keywords: ['천천히', '괜찮아', '작은 디테일', '조용히', '예쁘다'],
       avoid: '과한 에너지, 명령조',
     },
+    editorLines: [
+      '조용히 옆에 있을게.',
+      '천천히, 네 속도로 골라봐.',
+      '작은 디테일도 다 예쁘다.',
+    ],
   },
 
   // ── Moonlight · Soft · Playful · Free ───────────────────
@@ -180,6 +232,11 @@ export const GUARDIAN_TYPES: GuardianType[] = [
       keywords: ['은근', '꽤 괜찮다', '이런 거 좋지', '후후', '딱이다'],
       avoid: '너무 무겁거나 진지 일변도인 톤',
     },
+    editorLines: [
+      '후후, 꽤 잘 고르는데?',
+      '은근히 이게 더 좋지 않아?',
+      '딱 네 느낌이다.',
+    ],
   },
 
   // ── Moonlight · Soft · Calm · Warm ──────────────────────
@@ -197,6 +254,11 @@ export const GUARDIAN_TYPES: GuardianType[] = [
       keywords: ['서두르지 말자', '좋아할 온도', '포근하다', '곁에 있을게'],
       avoid: '자극적이고 날카로운 표현',
     },
+    editorLines: [
+      '서두르지 말자, 괜찮아.',
+      '네가 좋아할 온도로 골라봐.',
+      '포근하게 가면 돼.',
+    ],
   },
 
   // ── Moonlight · Soft · Calm · Free ──────────────────────
@@ -214,6 +276,11 @@ export const GUARDIAN_TYPES: GuardianType[] = [
       keywords: ['설명 안 해도 돼', '알아봤어', '뻔하지 않다', '네 분위기'],
       avoid: '과한 친근함, 너무 수다스러운 톤',
     },
+    editorLines: [
+      '굳이 설명 안 해도 돼.',
+      '알아봤어, 그거 맞아.',
+      '네 분위기대로 가.',
+    ],
   },
 
   // ── Moonlight · Strong · Playful · Warm ─────────────────
@@ -231,6 +298,11 @@ export const GUARDIAN_TYPES: GuardianType[] = [
       keywords: ['괜찮아', '확실히 네 편', '과하지 않다', '단단하다'],
       avoid: '과한 감정표현, 호들갑',
     },
+    editorLines: [
+      '티는 안 내지만 계속 보고 있어.',
+      '잘하고 있어, 그대로 가.',
+      '확실히 네 편이야.',
+    ],
   },
 
   // ── Moonlight · Strong · Playful · Free ─────────────────
@@ -248,6 +320,11 @@ export const GUARDIAN_TYPES: GuardianType[] = [
       keywords: ['조금 특별하게', '설명 안 돼도 괜찮아', '신기하다', '눈이 간다'],
       avoid: '너무 현실적이고 직설적인 톤',
     },
+    editorLines: [
+      '우리만 아는 느낌으로 가자.',
+      '끌리는 대로 골라봐.',
+      '조금 특별하게 만들어봐.',
+    ],
   },
 
   // ── Moonlight · Strong · Calm · Warm ────────────────────
@@ -265,6 +342,11 @@ export const GUARDIAN_TYPES: GuardianType[] = [
       keywords: ['내가 지켜줄게', '천천히', '편한 쪽으로', '충분해'],
       avoid: '가벼운 장난, 말 많은 톤',
     },
+    editorLines: [
+      '편한 쪽으로 골라봐, 내가 있어.',
+      '천천히, 네 마음 가는 쪽으로.',
+      '네가 고르는 것, 다 지켜줄게.',
+    ],
   },
 
   // ── Moonlight · Strong · Calm · Free ────────────────────
@@ -282,8 +364,20 @@ export const GUARDIAN_TYPES: GuardianType[] = [
       keywords: ['깊이', '담백함', '오래 남는다', '선명하지 않아도 느껴진다'],
       avoid: '지나치게 밝고 산뜻한 톤, 호들갑',
     },
+    editorLines: [
+      '조용한 게 약한 게 아니야.',
+      '끌리는 걸 골라, 그게 답이야.',
+      '뭘 골라도 네 깊이가 남아.',
+    ],
   },
 ]
+
+// imagePath 자동 부여 — 파일명은 key와 동일 (예: sunshine_mellow.png)
+// 특정 타입의 파일명이 다를 경우 GUARDIAN_TYPES_RAW 해당 항목에 imagePath를 직접 지정
+export const GUARDIAN_TYPES: GuardianType[] = GUARDIAN_TYPES_RAW.map((t) => ({
+  ...t,
+  imagePath: t.imagePath ?? `/images/guardians/${t.key}.png`,
+}))
 
 // key로 빠르게 조회
 export const GUARDIAN_TYPE_MAP = Object.fromEntries(
