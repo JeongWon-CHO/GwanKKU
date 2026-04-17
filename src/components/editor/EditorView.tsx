@@ -1,78 +1,44 @@
-"use client";
+'use client'
 
-import { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
-import { useEditorStore } from "@/store/useEditorStore";
-import { useTestStore } from "@/store/useTestStore";
-import { EDITOR_PRESETS } from "@/constants/editor-presets";
-import { GUARDIAN_TYPE_MAP } from "@/constants/guardian-types";
-import { calcGuardianType } from "@/lib/calcGuardianType";
-import { CoffinPreview } from "./CoffinPreview";
-import { CategoryTabs } from "./CategoryTabs";
-import { GuardianGuide } from "./GuardianGuide";
-import { OptionGrid } from "./OptionGrid";
-import type {
-  EditorTarget,
-  EditorCategoryId,
-  PreviewState,
-} from "@/types/editor";
-
-const DEFAULT_BACKGROUND = "#faf7f0";
-const MESSAGE_MAX_LENGTH = 30;
+import { useEffect, useMemo } from 'react'
+import { useRouter } from 'next/navigation'
+import { ArrowLeft } from 'lucide-react'
+import { useEditorStore } from '@/store/useEditorStore'
+import { useTestStore } from '@/store/useTestStore'
+import { EDITOR_PRESETS } from '@/constants/editor-presets'
+import { GUARDIAN_TYPE_MAP } from '@/constants/guardian-types'
+import { calcGuardianType } from '@/lib/calcGuardianType'
+import { CoffinBoard } from './CoffinBoard'
+import { DecorationPanel } from './DecorationPanel'
+import { GuardianGuide } from './GuardianGuide'
+import { isLight } from '@/lib/utils'
+import type { EditorTarget } from '@/types/editor'
 
 type Props = {
-  target: EditorTarget;
-};
+  target: EditorTarget
+}
 
 export function EditorView({ target }: Props) {
-  const router = useRouter();
-  const { selections, message, setTarget, setSelection, setMessage } =
-    useEditorStore();
-  const { answers } = useTestStore();
+  const router = useRouter()
+  const { backgroundColor, setTarget } = useEditorStore()
+  const { answers } = useTestStore()
 
-  const preset = EDITOR_PRESETS[target];
-  const [activeCategory, setActiveCategory] = useState<EditorCategoryId>(
-    preset.categories[0]?.id ?? "background",
-  );
+  const preset = EDITOR_PRESETS[target]
 
-  // 테스트 결과로부터 수호캐릭터 도출 (테스트 없이 직접 진입 시 null)
   const guardian = useMemo(() => {
-    if (Object.keys(answers).length === 0) return null;
-    const key = calcGuardianType(answers);
-    return GUARDIAN_TYPE_MAP[key] ?? null;
-  }, [answers]);
+    if (Object.keys(answers).length === 0) return null
+    const key = calcGuardianType(answers)
+    return GUARDIAN_TYPE_MAP[key] ?? null
+  }, [answers])
 
   useEffect(() => {
-    setTarget(target);
-  }, [target, setTarget]);
-
-  // 선택된 itemId → 실제 값(color / emoji)으로 변환
-  function resolveValue(
-    categoryId: EditorCategoryId,
-    fallback?: string,
-  ): string | null {
-    const selectedId = selections[categoryId];
-    if (!selectedId) return fallback ?? null;
-    const category = preset.categories.find((c) => c.id === categoryId);
-    const item = category?.items.find((i) => i.id === selectedId);
-    return item?.value ?? fallback ?? null;
-  }
-
-  const preview: PreviewState = {
-    backgroundColor: resolveValue("background", DEFAULT_BACKGROUND) as string,
-    ribbonEmoji: resolveValue("ribbon"),
-    stickerEmoji: resolveValue("sticker"),
-    message,
-  };
-
-  const activeItems =
-    preset.categories.find((c) => c.id === activeCategory)?.items ?? [];
+    setTarget(target)
+  }, [target, setTarget])
 
   return (
     <main className="flex min-h-screen flex-col">
       {/* 헤더 */}
-      <header className="flex items-center gap-3 border-b border-line px-4 py-4">
+      <header className="flex shrink-0 items-center gap-3 border-b border-line px-4 py-4">
         <button
           onClick={() => router.back()}
           aria-label="뒤로 가기"
@@ -85,83 +51,39 @@ export function EditorView({ target }: Props) {
         </h1>
       </header>
 
-      {/* 프리뷰 영역 */}
-      <section className="flex flex-col items-center bg-surface py-8">
-        <p className="mb-5 text-xs text-caption">
-          나만의 {preset.objectLabel}을 꾸미는 중이에요
-        </p>
-        <CoffinPreview preview={preview} />
-      </section>
+      {/* 스크롤 영역 전체 */}
+      <div className="flex-1 overflow-y-auto pb-28">
 
-      {/* 수호캐릭터 가이드 row — 테스트 완료 후 진입한 경우에만 노출 */}
-      {guardian && (
-        <div className="px-4 py-3 border-b border-line bg-surface">
-          <GuardianGuide guardian={guardian} lines={guardian.editorLines} />
-        </div>
-      )}
-
-      {/* 옵션 영역 */}
-      <section className="flex flex-1 flex-col px-4 pt-4 pb-32">
-        <CategoryTabs
-          categories={preset.categories}
-          active={activeCategory}
-          onChange={setActiveCategory}
-        />
-
-        <div className="mt-5">
-          {activeCategory === "message" ? (
-            <MessageInput
-              value={message}
-              onChange={setMessage}
-              maxLength={MESSAGE_MAX_LENGTH}
-            />
-          ) : (
-            <OptionGrid
-              items={activeItems}
-              selected={selections[activeCategory]}
-              onSelect={(id) => setSelection(activeCategory, id)}
-            />
+        {/* 관 보드 + 수호캐릭터 가이드 — 같은 배경으로 묶음 */}
+        <section
+          className="flex flex-col items-center transition-colors duration-300"
+          style={{ backgroundColor: isLight(backgroundColor) ? '#c8c2ba' : '#f5f5f4' }}
+        >
+          <div className="py-8">
+            <CoffinBoard backgroundColor={backgroundColor} />
+          </div>
+          {guardian && (
+            <div className="w-full border-t border-black/8 px-4 py-3">
+              <GuardianGuide guardian={guardian} lines={guardian.editorLines} />
+            </div>
           )}
-        </div>
-      </section>
+        </section>
+
+        {/* 장식 패널 */}
+        <section className="px-4 pt-5 pb-4">
+          <DecorationPanel />
+        </section>
+      </div>
 
       {/* 하단 CTA — fixed */}
       <div className="fixed bottom-0 left-0 right-0 border-t border-line bg-background px-4 py-4">
-        <p className="mb-3 text-center text-xs text-caption">
-          완성하면 간직하거나 나눌 수 있어요
-        </p>
         <button
-          onClick={() => router.push("/complete")}
+          onClick={() => router.push('/complete')}
           className="w-full rounded-2xl bg-accent py-4 text-base font-medium text-accent-fg transition-opacity active:opacity-80"
         >
           완성 보기
         </button>
       </div>
     </main>
-  );
-}
-
-// ── 문구 입력 ─────────────────────────────────────────────
-type MessageInputProps = {
-  value: string;
-  onChange: (value: string) => void;
-  maxLength: number;
-};
-
-function MessageInput({ value, onChange, maxLength }: MessageInputProps) {
-  return (
-    <div className="flex flex-col gap-2">
-      <textarea
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        maxLength={maxLength}
-        rows={3}
-        placeholder="마지막으로 남기고 싶은 말 한 마디"
-        className="w-full resize-none rounded-2xl border border-line bg-surface px-4 py-3.5 text-sm text-primary placeholder:text-caption focus:border-line-strong focus:outline-none"
-      />
-      <p className="text-right text-xs text-caption">
-        {value.length} / {maxLength}
-      </p>
-    </div>
-  );
+  )
 }

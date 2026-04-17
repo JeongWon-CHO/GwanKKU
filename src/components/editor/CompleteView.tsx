@@ -5,36 +5,18 @@ import { useRouter } from 'next/navigation'
 import { Share2, ImageDown, RotateCcw, ArrowLeft } from 'lucide-react'
 import { useEditorStore } from '@/store/useEditorStore'
 import { EDITOR_PRESETS } from '@/constants/editor-presets'
-import { CoffinPreview } from './CoffinPreview'
-import { cn } from '@/lib/utils'
-import type { PreviewState } from '@/types/editor'
-
-const DEFAULT_BACKGROUND = '#faf7f0'
+import { CoffinPreviewSmall } from './CoffinBoard'
+import { cn, isLight } from '@/lib/utils'
 
 export function CompleteView() {
   const router = useRouter()
-  const { target, selections, message, reset } = useEditorStore()
+  const { target, backgroundColor, message, reset } = useEditorStore()
   const [saveHint, setSaveHint] = useState(false)
   const [shareError, setShareError] = useState(false)
 
   if (!target) return null
 
   const preset = EDITOR_PRESETS[target]
-
-  function resolveValue(categoryId: keyof typeof selections, fallback?: string): string | null {
-    const selectedId = selections[categoryId]
-    if (!selectedId) return fallback ?? null
-    const category = preset.categories.find((c) => c.id === categoryId)
-    const item = category?.items.find((i) => i.id === selectedId)
-    return item?.value ?? fallback ?? null
-  }
-
-  const preview: PreviewState = {
-    backgroundColor: resolveValue('background', DEFAULT_BACKGROUND) as string,
-    ribbonEmoji: resolveValue('ribbon'),
-    stickerEmoji: resolveValue('sticker'),
-    message,
-  }
 
   async function handleShare() {
     setShareError(false)
@@ -81,20 +63,22 @@ export function CompleteView() {
         <h1 className="text-base font-medium text-primary">완성됐어요</h1>
       </header>
 
-      {/* 완성 미리보기 */}
-      <section className="flex flex-col items-center bg-surface px-4 py-10">
+      {/* 완성 미리보기 — 밝은 관일 때 배경 대비 자동 보정 */}
+      <section
+        className="flex flex-col items-center px-4 py-10 transition-colors duration-300"
+        style={{ backgroundColor: isLight(backgroundColor) ? '#c8c2ba' : '#f5f5f4' }}
+      >
         <p className="mb-2 text-sm font-medium text-primary">
           나만의 {preset.objectLabel}이 완성됐어요
         </p>
         <p className="mb-8 text-xs text-caption">
           간직하거나 소중한 사람과 나눠보세요
         </p>
-        <CoffinPreview preview={preview} />
+        <CoffinPreviewSmall backgroundColor={backgroundColor} />
       </section>
 
       {/* 액션 영역 */}
       <section className="flex flex-col gap-3 px-4 py-6">
-        {/* 공유하기 */}
         <button
           onClick={handleShare}
           className="flex items-center justify-center gap-2 w-full rounded-2xl bg-accent py-4 text-base font-medium text-accent-fg transition-opacity active:opacity-80"
@@ -108,7 +92,6 @@ export function CompleteView() {
           </p>
         )}
 
-        {/* 저장하기 */}
         <button
           onClick={handleSave}
           className="flex items-center justify-center gap-2 w-full rounded-2xl border border-line bg-background py-4 text-base font-medium text-primary transition-opacity active:opacity-80"
@@ -122,7 +105,6 @@ export function CompleteView() {
           </p>
         )}
 
-        {/* 다시 꾸미기 */}
         <button
           onClick={() => router.push('/editor/coffin')}
           className="flex items-center justify-center gap-2 w-full rounded-2xl border border-line bg-background py-4 text-base font-medium text-primary transition-opacity active:opacity-80"
@@ -131,7 +113,6 @@ export function CompleteView() {
         </button>
       </section>
 
-      {/* 처음으로 */}
       <div className="flex justify-center pb-10">
         <button
           onClick={handleRestart}

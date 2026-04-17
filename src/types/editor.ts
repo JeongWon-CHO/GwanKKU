@@ -1,20 +1,20 @@
 export type EditorTarget = 'coffin' | 'urn' | 'funeral' | 'grave'
 
-export type EditorItemType = 'color' | 'emoji'
+export type DecorationItemType = 'ribbon' | 'sticker' | 'flower' | 'symbol'
 
 export type EditorItem = {
   id: string
   label: string
-  value: string       // color: CSS hex  /  emoji: unicode 문자
-  type: EditorItemType
+  value: string   // color: CSS hex / decoration: unicode emoji
+  type: 'color' | DecorationItemType
 }
 
-export type EditorCategoryId = 'background' | 'ribbon' | 'sticker' | 'message'
+export type EditorCategoryId = 'background' | 'decoration'
 
 export type EditorCategoryConfig = {
   id: EditorCategoryId
   label: string
-  items: EditorItem[] // message 카테고리는 items가 빈 배열
+  items: EditorItem[]
 }
 
 export type EditorPreset = {
@@ -23,12 +23,14 @@ export type EditorPreset = {
   categories: EditorCategoryConfig[]
 }
 
-export type EditorSelections = Partial<Record<EditorCategoryId, string>>
+// ── Grid 배치 상태 ──────────────────────────────────────────
 
-// CoffinPreview 에 전달하는 resolved 상태
-export type PreviewState = {
-  backgroundColor: string
-  ribbonEmoji: string | null
-  stickerEmoji: string | null
-  message: string
+export type GridKey = `${number}-${number}`  // "행-열" e.g. "2-1"
+
+export type PlacedDecoration = {
+  itemId: string
+  emoji: string
+  decorationType: DecorationItemType
 }
+
+export type GridState = Partial<Record<GridKey, PlacedDecoration>>
