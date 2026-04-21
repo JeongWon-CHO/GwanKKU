@@ -27,6 +27,21 @@ export type EditorPreset = {
 
 export type GridKey = `${number}-${number}`  // "행-열" e.g. "2-1"
 
+// ── 면(Face) 구조 ──────────────────────────────────────────
+
+export type FaceKey = 'front' | 'side-left' | 'side-right' | 'back'
+
+export type FaceShape = 'octagon' | 'rect'
+
+export type FaceConfig = {
+  key: FaceKey
+  label: string
+  shape: FaceShape
+  rows: number
+  cols: number
+  inactiveCells: readonly GridKey[]
+}
+
 export type PlacedDecoration = {
   itemId: string
   emoji: string
