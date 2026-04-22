@@ -76,10 +76,18 @@
   --color-warning: var(--status-warning);
   --color-success: var(--status-success);
 
+  --animate-pop: pop 0.18s ease-out both;
+
   /* 기존 클래스 호환 — 컴포넌트 수정 전까지 유지 */
   --color-foreground: var(--text-primary); /* text-foreground */
   --color-muted: var(--text-body); /* text-muted → stone-700로 개선 */
   --color-subtle: var(--line); /* border-subtle, bg-subtle */
+}
+
+@keyframes pop {
+  0%   { transform: scale(0.4); }
+  70%  { transform: scale(1.18); }
+  100% { transform: scale(1); }
 }
 
 body {

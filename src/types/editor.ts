@@ -31,7 +31,7 @@ export type GridKey = `${number}-${number}`  // "행-열" e.g. "2-1"
 
 export type FaceKey = 'front' | 'side-left' | 'side-right' | 'back'
 
-export type FaceShape = 'octagon' | 'rect'
+export type FaceShape = 'octagon' | 'rect' | 'rect-h'
 
 export type FaceConfig = {
   key: FaceKey
@@ -40,6 +40,8 @@ export type FaceConfig = {
   rows: number
   cols: number
   inactiveCells: readonly GridKey[]
+  boardWidth: number
+  boardHeight: number
 }
 
 export type PlacedDecoration = {

@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { useEditorStore } from "@/store/useEditorStore";
 import { useTestStore } from "@/store/useTestStore";
 import { EDITOR_PRESETS } from "@/constants/editor-presets";
+import { ENABLED_FACES, FACE_CONFIGS } from "@/constants/editor-faces";
 import { GUARDIAN_TYPE_MAP } from "@/constants/guardian-types";
 import { calcGuardianType } from "@/lib/calcGuardianType";
 import { CoffinBoard } from "./CoffinBoard";
@@ -31,6 +32,42 @@ export function EditorView({ target }: Props) {
     const key = calcGuardianType(answers);
     return GUARDIAN_TYPE_MAP[key] ?? null;
   }, [answers]);
+
+  // ── 스와이프 감지 ────────────────────────────────────────────
+  const swipeStartRef = useRef<{ x: number; y: number } | null>(null);
+  const wasSwipeRef = useRef(false);
+
+  const handlePointerDown = (e: React.PointerEvent) => {
+    swipeStartRef.current = { x: e.clientX, y: e.clientY };
+    wasSwipeRef.current = false;
+  };
+
+  const handlePointerUp = (e: React.PointerEvent) => {
+    if (!swipeStartRef.current) return;
+    const dx = e.clientX - swipeStartRef.current.x;
+    const dy = e.clientY - swipeStartRef.current.y;
+    swipeStartRef.current = null;
+
+    const isHorizontal = Math.abs(dx) > Math.abs(dy) * 1.5;
+    if (Math.abs(dx) > 40 && isHorizontal) {
+      wasSwipeRef.current = true;
+      const idx = ENABLED_FACES.indexOf(activeFace);
+      if (dx < 0 && idx < ENABLED_FACES.length - 1) setActiveFace(ENABLED_FACES[idx + 1]);
+      if (dx > 0 && idx > 0) setActiveFace(ENABLED_FACES[idx - 1]);
+    }
+  };
+
+  const handlePointerCancel = () => {
+    swipeStartRef.current = null;
+    wasSwipeRef.current = false;
+  };
+
+  const handleClickCapture = (e: React.MouseEvent) => {
+    if (wasSwipeRef.current) {
+      e.stopPropagation();
+      wasSwipeRef.current = false;
+    }
+  };
 
   useEffect(() => {
     setTarget(target);
@@ -60,12 +97,18 @@ export function EditorView({ target }: Props) {
         }}
       >
         <FaceTabs activeFace={activeFace} onFaceChange={setActiveFace} />
-        <div className="flex flex-1 items-center justify-center py-3">
+        <div
+          className="flex flex-1 items-center justify-center py-3"
+          onPointerDown={handlePointerDown}
+          onPointerUp={handlePointerUp}
+          onPointerCancel={handlePointerCancel}
+          onClickCapture={handleClickCapture}
+        >
           <CoffinBoard
             backgroundColor={backgroundColor}
             face={activeFace}
-            width={200}
-            height={300}
+            width={FACE_CONFIGS[activeFace].boardWidth}
+            height={FACE_CONFIGS[activeFace].boardHeight}
           />
         </div>
 
