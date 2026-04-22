@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import type { EditorTarget, FaceKey, GridKey, GridState, MessageStyle, PlacedDecoration } from '@/types/editor'
+import type { EditorTarget, FaceKey, GridKey, GridState, MessageStyle, PlacedDecoration, UploadedImage } from '@/types/editor'
 
 const DEFAULT_BACKGROUND = '#faf7f0'
 const DEFAULT_FACE: FaceKey = 'front'
@@ -25,6 +25,7 @@ type EditorStore = {
   activeItemId: string | null
   message: string
   messageStyle: MessageStyle
+  uploadedImages: UploadedImage[]
   setTarget: (target: EditorTarget) => void
   setBackgroundColor: (color: string) => void
   setActiveFace: (face: FaceKey) => void
@@ -33,6 +34,8 @@ type EditorStore = {
   removeItem: (key: GridKey) => void
   setMessage: (message: string) => void
   setMessageStyle: (partial: Partial<MessageStyle>) => void
+  addUploadedImage: (img: UploadedImage) => void
+  removeUploadedImage: (id: string) => void
   reset: () => void
 }
 
@@ -44,6 +47,7 @@ export const useEditorStore = create<EditorStore>((set) => ({
   activeItemId: null,
   message: '',
   messageStyle: DEFAULT_MESSAGE_STYLE,
+  uploadedImages: [],
 
   setTarget: (target) => set({ target }),
 
@@ -81,6 +85,15 @@ export const useEditorStore = create<EditorStore>((set) => ({
   setMessageStyle: (partial) =>
     set((state) => ({ messageStyle: { ...state.messageStyle, ...partial } })),
 
+  addUploadedImage: (img) =>
+    set((state) => ({ uploadedImages: [...state.uploadedImages, img] })),
+
+  removeUploadedImage: (id) =>
+    set((state) => ({
+      uploadedImages: state.uploadedImages.filter((img) => img.id !== id),
+      activeItemId: state.activeItemId === id ? null : state.activeItemId,
+    })),
+
   reset: () =>
     set({
       target: null,
@@ -90,5 +103,6 @@ export const useEditorStore = create<EditorStore>((set) => ({
       activeItemId: null,
       message: '',
       messageStyle: DEFAULT_MESSAGE_STYLE,
+      uploadedImages: [],
     }),
 }))

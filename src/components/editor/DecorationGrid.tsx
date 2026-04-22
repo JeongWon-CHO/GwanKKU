@@ -15,7 +15,7 @@ type Props = {
 }
 
 export function DecorationGrid({ interactive = true }: Props) {
-  const { faceGrids, activeFace, activeItemId, backgroundColor, placeItem, removeItem } =
+  const { faceGrids, activeFace, activeItemId, backgroundColor, uploadedImages, placeItem, removeItem } =
     useEditorStore()
 
   const grid = faceGrids[activeFace]
@@ -27,15 +27,17 @@ export function DecorationGrid({ interactive = true }: Props) {
     if (!interactive) return
     if (grid[key]) { removeItem(key); return }
     if (!activeItemId) return
-    const item = decorationItems.find((i) => i.id === activeItemId)
-    if (!item || item.type === 'color') return
 
-    const decoration: PlacedDecoration = {
-      itemId: item.id,
-      emoji: item.value,
-      decorationType: item.type,
+    const presetItem = decorationItems.find((i) => i.id === activeItemId)
+    if (presetItem && presetItem.type !== 'color') {
+      placeItem(key, { itemId: presetItem.id, emoji: presetItem.value, decorationType: presetItem.type })
+      return
     }
-    placeItem(key, decoration)
+
+    const uploadedItem = uploadedImages.find((i) => i.id === activeItemId)
+    if (uploadedItem) {
+      placeItem(key, { itemId: uploadedItem.id, emoji: '', imageUrl: uploadedItem.dataUrl, decorationType: 'sticker' })
+    }
   }
 
   return (

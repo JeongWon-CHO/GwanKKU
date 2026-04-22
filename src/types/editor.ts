@@ -47,7 +47,13 @@ export type FaceConfig = {
 export type PlacedDecoration = {
   itemId: string
   emoji: string
+  imageUrl?: string
   decorationType: DecorationItemType
+}
+
+export type UploadedImage = {
+  id: string
+  dataUrl: string
 }
 
 export type GridState = Partial<Record<GridKey, PlacedDecoration>>

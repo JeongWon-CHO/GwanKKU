@@ -1,12 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useEditorStore } from "@/store/useEditorStore";
 import { COFFIN_CATEGORIES } from "@/constants/editor-coffin";
 import { cn } from "@/lib/utils";
+import type { DecorationItemType } from "@/types/editor";
 
 const DECO_PAGE_SIZE = 8;
+const MAX_UPLOADS = 5;
 
 const backgroundItems =
   COFFIN_CATEGORIES.find((c) => c.id === "background")?.items ?? [];
@@ -20,18 +22,94 @@ const TABS: { id: PanelTab; label: string }[] = [
   { id: "decoration", label: "장식" },
 ];
 
+type UnifiedItem =
+  | { kind: "add" }
+  | { kind: "upload"; id: string; dataUrl: string }
+  | {
+      kind: "preset";
+      id: string;
+      label: string;
+      emoji: string;
+      decorationType: DecorationItemType;
+    };
+
+async function resizeImage(file: File): Promise<string> {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const MAX = 160;
+        const scale = MAX / Math.max(img.naturalWidth, img.naturalHeight);
+        const w =
+          scale < 1 ? Math.round(img.naturalWidth * scale) : img.naturalWidth;
+        const h =
+          scale < 1 ? Math.round(img.naturalHeight * scale) : img.naturalHeight;
+        const canvas = document.createElement("canvas");
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) {
+          resolve(e.target!.result as string);
+          return;
+        }
+        ctx.drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL("image/webp", 0.85));
+      };
+      img.src = e.target!.result as string;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
 export function DecorationPanel() {
   const [activeTab, setActiveTab] = useState<PanelTab>("background");
   const [decoPage, setDecoPage] = useState(0);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const { backgroundColor, activeItemId, setBackgroundColor, setActiveItem } =
-    useEditorStore();
+  const {
+    backgroundColor,
+    activeItemId,
+    uploadedImages,
+    setBackgroundColor,
+    setActiveItem,
+    addUploadedImage,
+    removeUploadedImage,
+  } = useEditorStore();
 
-  const decoPageCount = Math.ceil(decorationItems.length / DECO_PAGE_SIZE);
-  const pagedDecoItems = decorationItems.slice(
+  const allItems: UnifiedItem[] = [
+    { kind: "add" },
+    ...uploadedImages.map((img) => ({
+      kind: "upload" as const,
+      id: img.id,
+      dataUrl: img.dataUrl,
+    })),
+    ...decorationItems.map((item) => ({
+      kind: "preset" as const,
+      id: item.id,
+      label: item.label,
+      emoji: item.value,
+      decorationType: item.type as DecorationItemType,
+    })),
+  ];
+
+  const totalPages = Math.ceil(allItems.length / DECO_PAGE_SIZE);
+  const pagedItems = allItems.slice(
     decoPage * DECO_PAGE_SIZE,
     (decoPage + 1) * DECO_PAGE_SIZE,
   );
+
+  const presetEmoji = decorationItems.find((i) => i.id === activeItemId)?.value;
+
+  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file || uploadedImages.length >= MAX_UPLOADS) return;
+    const dataUrl = await resizeImage(file);
+    const id = `upload-${Date.now()}`;
+    addUploadedImage({ id, dataUrl });
+    setActiveItem(id);
+    e.target.value = "";
+  }
 
   return (
     <div className="flex flex-col gap-4">
@@ -78,11 +156,11 @@ export function DecorationPanel() {
         {/* 장식 */}
         {activeTab === "decoration" && (
           <div className="flex flex-col gap-3">
+            {/* 힌트 */}
             <div className="flex min-h-6 items-center justify-center">
               {activeItemId ? (
                 <p className="text-xs text-caption">
-                  {decorationItems.find((i) => i.id === activeItemId)?.value}{" "}
-                  관을 탭해서 붙여보세요
+                  {presetEmoji && `${presetEmoji} `}관을 탭해서 붙여보세요
                 </p>
               ) : (
                 <p className="text-xs text-caption">
@@ -91,34 +169,105 @@ export function DecorationPanel() {
               )}
             </div>
 
+            {/* 통합 그리드 */}
             <div className="grid grid-cols-4 gap-2">
-              {pagedDecoItems.map((item) => (
-                <button
-                  key={item.id}
-                  onClick={() =>
-                    setActiveItem(activeItemId === item.id ? null : item.id)
-                  }
-                  className={cn(
-                    "flex flex-col items-center gap-1.5 rounded-2xl px-2 py-2 transition-colors",
-                    activeItemId === item.id
-                      ? "bg-inset ring-1 ring-accent/40"
-                      : "bg-surface",
-                  )}
-                >
-                  <span className="text-2xl leading-none">{item.value}</span>
-                  <span
+              {pagedItems.map((item) => {
+                if (item.kind === "add") {
+                  return (
+                    <button
+                      key="add"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={uploadedImages.length >= MAX_UPLOADS}
+                      className={cn(
+                        "flex flex-col items-center gap-1.5 rounded-2xl px-2 py-2 transition-colors bg-surface",
+                        uploadedImages.length >= MAX_UPLOADS &&
+                          "pointer-events-none opacity-40",
+                      )}
+                    >
+                      <span className="text-2xl leading-none text-caption">
+                        +
+                      </span>
+                      <span className="text-xs leading-none text-caption">
+                        추가
+                      </span>
+                    </button>
+                  );
+                }
+
+                if (item.kind === "upload") {
+                  return (
+                    <div key={item.id} className="relative">
+                      <button
+                        onClick={() =>
+                          setActiveItem(
+                            activeItemId === item.id ? null : item.id,
+                          )
+                        }
+                        className={cn(
+                          "flex w-full flex-col items-center gap-1.5 rounded-2xl px-2 py-2 transition-colors bg-surface",
+                          activeItemId === item.id &&
+                            "bg-inset ring-1 ring-accent/40",
+                        )}
+                      >
+                        <div className="relative h-6 w-6 overflow-hidden rounded-sm">
+                          <img
+                            src={item.dataUrl}
+                            alt=""
+                            className="absolute inset-0 h-full w-full object-cover select-none"
+                            draggable={false}
+                          />
+                        </div>
+                        <span
+                          className={cn(
+                            "text-xs leading-none",
+                            activeItemId === item.id
+                              ? "text-body"
+                              : "text-caption",
+                          )}
+                        >
+                          내 이미지
+                        </span>
+                      </button>
+                      <button
+                        onClick={() => removeUploadedImage(item.id)}
+                        aria-label="삭제"
+                        className="absolute -right-1 -top-1 flex size-4 items-center justify-center rounded-full bg-primary text-[10px] leading-none text-background"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  );
+                }
+
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() =>
+                      setActiveItem(activeItemId === item.id ? null : item.id)
+                    }
                     className={cn(
-                      "text-xs leading-none",
-                      activeItemId === item.id ? "text-body" : "text-caption",
+                      "flex flex-col items-center gap-1.5 rounded-2xl px-2 py-2 transition-colors",
+                      activeItemId === item.id
+                        ? "bg-inset ring-1 ring-accent/40"
+                        : "bg-surface",
                     )}
                   >
-                    {item.label}
-                  </span>
-                </button>
-              ))}
+                    <span className="text-2xl leading-none">{item.emoji}</span>
+                    <span
+                      className={cn(
+                        "text-xs leading-none",
+                        activeItemId === item.id ? "text-body" : "text-caption",
+                      )}
+                    >
+                      {item.label}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
 
-            {decoPageCount > 1 && (
+            {/* 페이지네이션 */}
+            {totalPages > 1 && (
               <div className="flex items-center justify-center gap-3">
                 <button
                   onClick={() => setDecoPage((p) => Math.max(0, p - 1))}
@@ -134,13 +283,15 @@ export function DecorationPanel() {
                 </button>
 
                 <div className="flex items-center gap-2">
-                  {Array.from({ length: decoPageCount }, (_, i) => (
+                  {Array.from({ length: totalPages }, (_, i) => (
                     <button
                       key={i}
                       onClick={() => setDecoPage(i)}
                       className={cn(
                         "rounded-full transition-all",
-                        i === decoPage ? "size-2 bg-primary" : "size-1.5 bg-line",
+                        i === decoPage
+                          ? "size-2 bg-primary"
+                          : "size-1.5 bg-line",
                       )}
                     />
                   ))}
@@ -148,12 +299,12 @@ export function DecorationPanel() {
 
                 <button
                   onClick={() =>
-                    setDecoPage((p) => Math.min(decoPageCount - 1, p + 1))
+                    setDecoPage((p) => Math.min(totalPages - 1, p + 1))
                   }
-                  disabled={decoPage === decoPageCount - 1}
+                  disabled={decoPage === totalPages - 1}
                   className={cn(
                     "flex size-7 items-center justify-center rounded-full transition-colors",
-                    decoPage === decoPageCount - 1
+                    decoPage === totalPages - 1
                       ? "pointer-events-none text-caption/40"
                       : "text-caption hover:text-primary",
                   )}
@@ -162,6 +313,14 @@ export function DecorationPanel() {
                 </button>
               </div>
             )}
+
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleFileChange}
+            />
           </div>
         )}
       </div>
