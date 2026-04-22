@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { useEditorStore } from "@/store/useEditorStore";
@@ -13,6 +13,7 @@ import { CoffinBoard } from "./CoffinBoard";
 import { DecorationPanel } from "./DecorationPanel";
 import { FaceTabs } from "./FaceTabs";
 import { GuardianGuide } from "./GuardianGuide";
+import { MessageSheet } from "./MessageSheet";
 import { isLight } from "@/lib/utils";
 import type { EditorTarget } from "@/types/editor";
 
@@ -22,6 +23,7 @@ type Props = {
 
 export function EditorView({ target }: Props) {
   const router = useRouter();
+  const [showMessageSheet, setShowMessageSheet] = useState(false);
   const { backgroundColor, activeFace, setTarget, setActiveFace } = useEditorStore();
   const { answers } = useTestStore();
 
@@ -128,12 +130,19 @@ export function EditorView({ target }: Props) {
       {/* 완료 버튼 */}
       <div className="shrink-0 border-t border-line bg-background px-4 py-3">
         <button
-          onClick={() => router.push("/complete")}
+          onClick={() => setShowMessageSheet(true)}
           className="w-full rounded-2xl bg-accent py-3.5 text-base font-medium text-accent-fg transition-opacity active:opacity-80"
         >
           완성 보기
         </button>
       </div>
+
+      {showMessageSheet && (
+        <MessageSheet
+          onConfirm={() => router.push("/complete")}
+          onClose={() => setShowMessageSheet(false)}
+        />
+      )}
     </main>
   );
 }

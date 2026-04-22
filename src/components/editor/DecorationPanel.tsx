@@ -1,51 +1,31 @@
 "use client";
 
 import { useState } from "react";
-import { AlignCenter, AlignLeft, AlignRight, ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useEditorStore } from "@/store/useEditorStore";
 import { COFFIN_CATEGORIES } from "@/constants/editor-coffin";
-import { MESSAGE_FONTS } from "@/constants/message-fonts";
 import { cn } from "@/lib/utils";
-import type { MessageAlign } from "@/types/editor";
 
-const ALIGN_OPTIONS: { value: MessageAlign; icon: typeof AlignLeft }[] = [
-  { value: "left", icon: AlignLeft },
-  { value: "center", icon: AlignCenter },
-  { value: "right", icon: AlignRight },
-];
-
-type PanelTab = "background" | "decoration" | "message";
-
-const TABS: { id: PanelTab; label: string }[] = [
-  { id: "background", label: "배경" },
-  { id: "decoration", label: "장식" },
-  { id: "message", label: "문구" },
-];
-
-// 장식 탭: 4열 × 2행 = 8개씩 페이지 분할
 const DECO_PAGE_SIZE = 8;
-
-const MESSAGE_MAX = 30;
 
 const backgroundItems =
   COFFIN_CATEGORIES.find((c) => c.id === "background")?.items ?? [];
 const decorationItems =
   COFFIN_CATEGORIES.find((c) => c.id === "decoration")?.items ?? [];
 
+type PanelTab = "background" | "decoration";
+
+const TABS: { id: PanelTab; label: string }[] = [
+  { id: "background", label: "배경" },
+  { id: "decoration", label: "장식" },
+];
+
 export function DecorationPanel() {
   const [activeTab, setActiveTab] = useState<PanelTab>("background");
   const [decoPage, setDecoPage] = useState(0);
 
-  const {
-    backgroundColor,
-    activeItemId,
-    message,
-    messageStyle,
-    setBackgroundColor,
-    setActiveItem,
-    setMessage,
-    setMessageStyle,
-  } = useEditorStore();
+  const { backgroundColor, activeItemId, setBackgroundColor, setActiveItem } =
+    useEditorStore();
 
   const decoPageCount = Math.ceil(decorationItems.length / DECO_PAGE_SIZE);
   const pagedDecoItems = decorationItems.slice(
@@ -73,7 +53,7 @@ export function DecorationPanel() {
         ))}
       </div>
 
-      {/* 콘텐츠 영역 — 탭별 높이 차이를 막기 위해 고정 높이로 묶음 */}
+      {/* 콘텐츠 영역 */}
       <div className="h-50 overflow-y-auto overscroll-contain">
         {/* 배경 */}
         {activeTab === "background" && (
@@ -98,7 +78,6 @@ export function DecorationPanel() {
         {/* 장식 */}
         {activeTab === "decoration" && (
           <div className="flex flex-col gap-3">
-            {/* 선택 상태 힌트 */}
             <div className="flex min-h-6 items-center justify-center">
               {activeItemId ? (
                 <p className="text-xs text-caption">
@@ -112,7 +91,6 @@ export function DecorationPanel() {
               )}
             </div>
 
-            {/* 아이템 그리드 (고정 2행) */}
             <div className="grid grid-cols-4 gap-2">
               {pagedDecoItems.map((item) => (
                 <button
@@ -140,7 +118,6 @@ export function DecorationPanel() {
               ))}
             </div>
 
-            {/* 페이지네이션 — 2페이지 이상일 때만 표시 */}
             {decoPageCount > 1 && (
               <div className="flex items-center justify-center gap-3">
                 <button
@@ -149,7 +126,7 @@ export function DecorationPanel() {
                   className={cn(
                     "flex size-7 items-center justify-center rounded-full transition-colors",
                     decoPage === 0
-                      ? "text-caption/40 pointer-events-none"
+                      ? "pointer-events-none text-caption/40"
                       : "text-caption hover:text-primary",
                   )}
                 >
@@ -163,9 +140,7 @@ export function DecorationPanel() {
                       onClick={() => setDecoPage(i)}
                       className={cn(
                         "rounded-full transition-all",
-                        i === decoPage
-                          ? "size-2 bg-primary"
-                          : "size-1.5 bg-line",
+                        i === decoPage ? "size-2 bg-primary" : "size-1.5 bg-line",
                       )}
                     />
                   ))}
@@ -179,7 +154,7 @@ export function DecorationPanel() {
                   className={cn(
                     "flex size-7 items-center justify-center rounded-full transition-colors",
                     decoPage === decoPageCount - 1
-                      ? "text-caption/40 pointer-events-none"
+                      ? "pointer-events-none text-caption/40"
                       : "text-caption hover:text-primary",
                   )}
                 >
@@ -189,90 +164,7 @@ export function DecorationPanel() {
             )}
           </div>
         )}
-
-        {/* 문구 */}
-        {activeTab === "message" && (
-          <div className="flex flex-col gap-2">
-            <textarea
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              maxLength={MESSAGE_MAX}
-              rows={2}
-              placeholder="마지막으로 남기고 싶은 한 마디"
-              className="w-full resize-none rounded-2xl border border-line bg-surface px-4 py-3 text-sm text-primary placeholder:text-caption focus:border-line-strong focus:outline-none"
-            />
-            <p className="text-right text-xs text-caption">
-              {message.length} / {MESSAGE_MAX}
-            </p>
-
-            {/* 폰트 */}
-            <div className="flex gap-1.5">
-              {MESSAGE_FONTS.map(({ id, label, cssVar }) => (
-                <button
-                  key={id}
-                  onClick={() => setMessageStyle({ font: id })}
-                  className={cn(
-                    "flex-1 rounded-full py-1 text-xs transition-colors",
-                    messageStyle.font === id
-                      ? "bg-primary font-medium text-background"
-                      : "bg-surface text-caption",
-                  )}
-                  style={{ fontFamily: cssVar }}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-
-            {/* 정렬 + 굵기 + 기울임 */}
-            <div className="flex items-center gap-1.5">
-              <div className="flex flex-1 gap-1">
-                {ALIGN_OPTIONS.map(({ value, icon: Icon }) => (
-                  <button
-                    key={value}
-                    onClick={() => setMessageStyle({ align: value })}
-                    className={cn(
-                      "flex flex-1 items-center justify-center rounded-xl py-1.5 transition-colors",
-                      messageStyle.align === value
-                        ? "bg-primary text-background"
-                        : "bg-surface text-caption",
-                    )}
-                  >
-                    <Icon className="size-3.5" />
-                  </button>
-                ))}
-              </div>
-
-              <div className="h-5 w-px bg-line" />
-
-              <button
-                onClick={() => setMessageStyle({ bold: !messageStyle.bold })}
-                className={cn(
-                  "flex size-8 items-center justify-center rounded-xl text-sm font-bold transition-colors",
-                  messageStyle.bold
-                    ? "bg-primary text-background"
-                    : "bg-surface text-caption",
-                )}
-              >
-                B
-              </button>
-
-              <button
-                onClick={() => setMessageStyle({ italic: !messageStyle.italic })}
-                className={cn(
-                  "flex size-8 items-center justify-center rounded-xl text-sm italic transition-colors",
-                  messageStyle.italic
-                    ? "bg-primary text-background"
-                    : "bg-surface text-caption",
-                )}
-              >
-                I
-              </button>
-            </div>
-          </div>
-        )}
       </div>
-      {/* 콘텐츠 영역 끝 */}
     </div>
   );
 }
