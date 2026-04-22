@@ -27,6 +27,23 @@ export type EditorPreset = {
 
 export type GridKey = `${number}-${number}`  // "행-열" e.g. "2-1"
 
+// ── 면(Face) 구조 ──────────────────────────────────────────
+
+export type FaceKey = 'front' | 'side-left' | 'side-right' | 'back'
+
+export type FaceShape = 'octagon' | 'rect' | 'rect-h'
+
+export type FaceConfig = {
+  key: FaceKey
+  label: string
+  shape: FaceShape
+  rows: number
+  cols: number
+  inactiveCells: readonly GridKey[]
+  boardWidth: number
+  boardHeight: number
+}
+
 export type PlacedDecoration = {
   itemId: string
   emoji: string
@@ -34,3 +51,15 @@ export type PlacedDecoration = {
 }
 
 export type GridState = Partial<Record<GridKey, PlacedDecoration>>
+
+// ── 문구 스타일 ──────────────────────────────────────────────
+
+export type MessageFontFamily = 'pretendard' | 'konkon' | 'laundry' | 'wishlist'
+export type MessageAlign = 'left' | 'center' | 'right'
+
+export type MessageStyle = {
+  font: MessageFontFamily
+  align: MessageAlign
+  bold: boolean
+  italic: boolean
+}
