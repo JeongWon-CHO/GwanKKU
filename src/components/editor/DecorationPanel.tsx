@@ -1,10 +1,18 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { AlignCenter, AlignLeft, AlignRight, ChevronLeft, ChevronRight } from "lucide-react";
 import { useEditorStore } from "@/store/useEditorStore";
 import { COFFIN_CATEGORIES } from "@/constants/editor-coffin";
+import { MESSAGE_FONTS } from "@/constants/message-fonts";
 import { cn } from "@/lib/utils";
+import type { MessageAlign } from "@/types/editor";
+
+const ALIGN_OPTIONS: { value: MessageAlign; icon: typeof AlignLeft }[] = [
+  { value: "left", icon: AlignLeft },
+  { value: "center", icon: AlignCenter },
+  { value: "right", icon: AlignRight },
+];
 
 type PanelTab = "background" | "decoration" | "message";
 
@@ -32,9 +40,11 @@ export function DecorationPanel() {
     backgroundColor,
     activeItemId,
     message,
+    messageStyle,
     setBackgroundColor,
     setActiveItem,
     setMessage,
+    setMessageStyle,
   } = useEditorStore();
 
   const decoPageCount = Math.ceil(decorationItems.length / DECO_PAGE_SIZE);
@@ -187,13 +197,78 @@ export function DecorationPanel() {
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               maxLength={MESSAGE_MAX}
-              rows={3}
+              rows={2}
               placeholder="마지막으로 남기고 싶은 한 마디"
-              className="w-full resize-none rounded-2xl border border-line bg-surface px-4 py-3.5 text-sm text-primary placeholder:text-caption focus:border-line-strong focus:outline-none"
+              className="w-full resize-none rounded-2xl border border-line bg-surface px-4 py-3 text-sm text-primary placeholder:text-caption focus:border-line-strong focus:outline-none"
             />
             <p className="text-right text-xs text-caption">
               {message.length} / {MESSAGE_MAX}
             </p>
+
+            {/* 폰트 */}
+            <div className="flex gap-1.5">
+              {MESSAGE_FONTS.map(({ id, label, cssVar }) => (
+                <button
+                  key={id}
+                  onClick={() => setMessageStyle({ font: id })}
+                  className={cn(
+                    "flex-1 rounded-full py-1 text-xs transition-colors",
+                    messageStyle.font === id
+                      ? "bg-primary font-medium text-background"
+                      : "bg-surface text-caption",
+                  )}
+                  style={{ fontFamily: cssVar }}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+
+            {/* 정렬 + 굵기 + 기울임 */}
+            <div className="flex items-center gap-1.5">
+              <div className="flex flex-1 gap-1">
+                {ALIGN_OPTIONS.map(({ value, icon: Icon }) => (
+                  <button
+                    key={value}
+                    onClick={() => setMessageStyle({ align: value })}
+                    className={cn(
+                      "flex flex-1 items-center justify-center rounded-xl py-1.5 transition-colors",
+                      messageStyle.align === value
+                        ? "bg-primary text-background"
+                        : "bg-surface text-caption",
+                    )}
+                  >
+                    <Icon className="size-3.5" />
+                  </button>
+                ))}
+              </div>
+
+              <div className="h-5 w-px bg-line" />
+
+              <button
+                onClick={() => setMessageStyle({ bold: !messageStyle.bold })}
+                className={cn(
+                  "flex size-8 items-center justify-center rounded-xl text-sm font-bold transition-colors",
+                  messageStyle.bold
+                    ? "bg-primary text-background"
+                    : "bg-surface text-caption",
+                )}
+              >
+                B
+              </button>
+
+              <button
+                onClick={() => setMessageStyle({ italic: !messageStyle.italic })}
+                className={cn(
+                  "flex size-8 items-center justify-center rounded-xl text-sm italic transition-colors",
+                  messageStyle.italic
+                    ? "bg-primary text-background"
+                    : "bg-surface text-caption",
+                )}
+              >
+                I
+              </button>
+            </div>
           </div>
         )}
       </div>

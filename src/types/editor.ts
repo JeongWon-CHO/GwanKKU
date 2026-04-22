@@ -51,3 +51,15 @@ export type PlacedDecoration = {
 }
 
 export type GridState = Partial<Record<GridKey, PlacedDecoration>>
+
+// ── 문구 스타일 ──────────────────────────────────────────────
+
+export type MessageFontFamily = 'pretendard' | 'konkon' | 'laundry' | 'wishlist'
+export type MessageAlign = 'left' | 'center' | 'right'
+
+export type MessageStyle = {
+  font: MessageFontFamily
+  align: MessageAlign
+  bold: boolean
+  italic: boolean
+}

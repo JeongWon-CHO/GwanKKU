@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { pretendardFont, konkonFont, laundryFont, wishlistFont } from "@/lib/fonts";
+import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "관꾸",
@@ -12,7 +14,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ko" className="h-full">
+    <html
+      lang="ko"
+      className={cn(
+        "h-full",
+        pretendardFont.variable,
+        konkonFont.variable,
+        laundryFont.variable,
+        wishlistFont.variable,
+      )}
+    >
       <body className="min-h-full bg-background text-primary antialiased">
         {children}
       </body>

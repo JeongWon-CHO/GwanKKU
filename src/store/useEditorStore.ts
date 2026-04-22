@@ -1,8 +1,14 @@
 import { create } from 'zustand'
-import type { EditorTarget, FaceKey, GridKey, GridState, PlacedDecoration } from '@/types/editor'
+import type { EditorTarget, FaceKey, GridKey, GridState, MessageStyle, PlacedDecoration } from '@/types/editor'
 
 const DEFAULT_BACKGROUND = '#faf7f0'
 const DEFAULT_FACE: FaceKey = 'front'
+const DEFAULT_MESSAGE_STYLE: MessageStyle = {
+  font: 'pretendard',
+  align: 'center',
+  bold: false,
+  italic: false,
+}
 
 const emptyFaceGrids = (): Record<FaceKey, GridState> => ({
   front: {},
@@ -18,6 +24,7 @@ type EditorStore = {
   activeFace: FaceKey
   activeItemId: string | null
   message: string
+  messageStyle: MessageStyle
   setTarget: (target: EditorTarget) => void
   setBackgroundColor: (color: string) => void
   setActiveFace: (face: FaceKey) => void
@@ -25,6 +32,7 @@ type EditorStore = {
   placeItem: (key: GridKey, decoration: PlacedDecoration) => void
   removeItem: (key: GridKey) => void
   setMessage: (message: string) => void
+  setMessageStyle: (partial: Partial<MessageStyle>) => void
   reset: () => void
 }
 
@@ -35,6 +43,7 @@ export const useEditorStore = create<EditorStore>((set) => ({
   activeFace: DEFAULT_FACE,
   activeItemId: null,
   message: '',
+  messageStyle: DEFAULT_MESSAGE_STYLE,
 
   setTarget: (target) => set({ target }),
 
@@ -69,6 +78,9 @@ export const useEditorStore = create<EditorStore>((set) => ({
 
   setMessage: (message) => set({ message }),
 
+  setMessageStyle: (partial) =>
+    set((state) => ({ messageStyle: { ...state.messageStyle, ...partial } })),
+
   reset: () =>
     set({
       target: null,
@@ -77,5 +89,6 @@ export const useEditorStore = create<EditorStore>((set) => ({
       activeFace: DEFAULT_FACE,
       activeItemId: null,
       message: '',
+      messageStyle: DEFAULT_MESSAGE_STYLE,
     }),
 }))
