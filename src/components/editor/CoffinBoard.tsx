@@ -80,9 +80,9 @@ export function CoffinBoard({ backgroundColor, face, width = 240, height = 360 }
 }
 
 // ── 완성·공유 화면용 (160×240, non-interactive) ────────────
-// 항상 정면(octagon) shape로 고정 렌더링
+// 항상 정면(rect) shape로 고정 렌더링
 export function CoffinPreviewSmall({ backgroundColor }: PreviewProps) {
-  const { viewBox, outer, inner, clip } = SHAPES.octagon
+  const { viewBox, outer, inner, clip } = SHAPES.rect
 
   return (
     <div
