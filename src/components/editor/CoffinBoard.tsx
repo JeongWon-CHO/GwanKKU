@@ -1,7 +1,6 @@
 'use client'
 
 import { DecorationGrid } from './DecorationGrid'
-import { MessageBand } from './MessageBand'
 import { FACE_CONFIGS } from '@/constants/editor-faces'
 import { deriveFrameColor, deriveGrooveColor } from '@/lib/utils'
 import type { FaceShape, FaceKey } from '@/types/editor'
@@ -73,7 +72,6 @@ export function CoffinBoard({ backgroundColor, face, width = 240, height = 360 }
 
       <div style={{ position: 'absolute', inset: 0, clipPath: clip }}>
         <DecorationGrid interactive={true} />
-        {face === 'front' && <MessageBand backgroundColor={backgroundColor} />}
       </div>
     </div>
   )
@@ -112,7 +110,6 @@ export function CoffinPreviewSmall({ backgroundColor }: PreviewProps) {
         }}
       >
         <DecorationGrid interactive={false} />
-        <MessageBand backgroundColor={backgroundColor} />
       </div>
     </div>
   )

@@ -75,6 +75,11 @@ export function CompleteView() {
           간직하거나 소중한 사람과 나눠보세요
         </p>
         <CoffinPreviewSmall backgroundColor={backgroundColor} />
+        {message && (
+          <p className="mt-6 max-w-60 break-keep text-center text-sm leading-relaxed text-primary">
+            &ldquo;{message}&rdquo;
+          </p>
+        )}
       </section>
 
       {/* 액션 영역 */}
