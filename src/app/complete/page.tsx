@@ -11,7 +11,7 @@ export default function CompletePage() {
 
   useEffect(() => {
     if (!target) {
-      router.replace('/editor/coffin')
+      router.replace('/')
     }
   }, [target, router])
 
