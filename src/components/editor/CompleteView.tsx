@@ -1,10 +1,11 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Share2, ImageDown, RotateCcw, ArrowLeft } from "lucide-react";
 import { useEditorStore } from "@/store/useEditorStore";
 import { EDITOR_PRESETS } from "@/constants/editor-presets";
+import { saveSnapshot } from "@/lib/snapshot";
 import { CoffinPreviewSmall } from "./CoffinBoard";
 import { SaveCard } from "./SaveCard";
 import { cn, isLight } from "@/lib/utils";
@@ -29,8 +30,30 @@ function triggerDownload(blob: Blob, filename: string) {
 
 export function CompleteView() {
   const router = useRouter();
-  const { target, backgroundColor, message, reset } = useEditorStore();
+  const { target, backgroundColor, backgroundPatternId, faceGrids, message, messageStyle, uploadedImages, reset } = useEditorStore();
   const cardRef = useRef<HTMLDivElement>(null);
+  const hasSavedRef = useRef(false);
+
+  useEffect(() => {
+    if (hasSavedRef.current || !target) return;
+    // archive에서 불러온 경우 중복 저장 방지
+    if (new URLSearchParams(window.location.search).get('from') === 'archive') return;
+    hasSavedRef.current = true;
+    saveSnapshot({
+      version: 1,
+      id: Date.now().toString(36),
+      createdAt: new Date().toISOString(),
+      target,
+      backgroundColor,
+      backgroundPatternId,
+      faceGrids,
+      message,
+      messageStyle,
+      uploadedImages,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const [isSaving, setIsSaving] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
@@ -175,7 +198,13 @@ export function CompleteView() {
         </button>
       </section>
 
-      <div className="flex justify-center pb-10">
+      <div className="flex flex-col items-center gap-3 pb-10">
+        <button
+          onClick={() => router.push('/archive')}
+          className="text-sm text-caption underline-offset-2 hover:underline"
+        >
+          나의 보관함 보기
+        </button>
         <button
           onClick={handleRestart}
           className={cn(

@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import type { EditorTarget, FaceKey, GridKey, GridState, MessageStyle, PlacedDecoration, UploadedImage } from '@/types/editor'
 import type { PatternId } from '@/constants/editor-patterns'
+import type { CoffinSnapshot } from '@/types/snapshot'
 
 const DEFAULT_BACKGROUND = '#faf7f0'
 const DEFAULT_FACE: FaceKey = 'front'
@@ -39,6 +40,7 @@ type EditorStore = {
   setMessageStyle: (partial: Partial<MessageStyle>) => void
   addUploadedImage: (img: UploadedImage) => void
   removeUploadedImage: (id: string) => void
+  loadFromSnapshot: (snapshot: CoffinSnapshot) => void
   reset: () => void
 }
 
@@ -99,6 +101,19 @@ export const useEditorStore = create<EditorStore>((set) => ({
       uploadedImages: state.uploadedImages.filter((img) => img.id !== id),
       activeItemId: state.activeItemId === id ? null : state.activeItemId,
     })),
+
+  loadFromSnapshot: (snapshot) =>
+    set({
+      target: snapshot.target,
+      backgroundColor: snapshot.backgroundColor,
+      backgroundPatternId: snapshot.backgroundPatternId,
+      faceGrids: snapshot.faceGrids,
+      activeFace: DEFAULT_FACE,
+      activeItemId: null,
+      message: snapshot.message,
+      messageStyle: snapshot.messageStyle,
+      uploadedImages: snapshot.uploadedImages,
+    }),
 
   reset: () =>
     set({
