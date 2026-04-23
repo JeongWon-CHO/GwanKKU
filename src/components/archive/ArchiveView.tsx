@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, Archive } from 'lucide-react'
+import { ArrowLeft, Archive, Pencil } from 'lucide-react'
 import { useSnapshots } from '@/hooks/useSnapshots'
 import { useEditorStore } from '@/store/useEditorStore'
 import { SnapshotThumbnail } from '@/components/archive/SnapshotThumbnail'
@@ -20,6 +20,12 @@ export function ArchiveView() {
   function handleView(snapshot: CoffinSnapshot) {
     loadFromSnapshot(snapshot)
     router.push('/complete?from=archive')
+  }
+
+  function handleEdit(snapshot: CoffinSnapshot, e: React.MouseEvent) {
+    e.stopPropagation()
+    loadFromSnapshot(snapshot)
+    router.push('/editor/coffin')
   }
 
   return (
@@ -46,16 +52,25 @@ export function ArchiveView() {
             <button
               key={snapshot.id}
               onClick={() => handleView(snapshot)}
-              className="flex flex-col items-center gap-2.5 rounded-2xl bg-surface p-3 text-left transition-opacity active:opacity-70"
+              className="flex flex-col overflow-hidden rounded-2xl bg-surface text-left transition-opacity active:opacity-70"
             >
               <SnapshotThumbnail snapshot={snapshot} />
-              <div className="w-full">
+              <div className="w-full px-3 pb-2 pt-2.5">
                 {snapshot.message ? (
                   <p className="line-clamp-2 text-sm leading-snug text-primary">{snapshot.message}</p>
                 ) : (
-                  <p className="text-sm text-caption/60">문구 없음</p>
+                  <p className="text-sm text-caption/50">문구 없음</p>
                 )}
-                <p className="mt-1 text-xs text-caption">{formatDate(snapshot.createdAt)}</p>
+                <div className="mt-1 flex items-center justify-between">
+                  <p className="text-xs text-caption">{formatDate(snapshot.createdAt)}</p>
+                  <button
+                    onClick={(e) => handleEdit(snapshot, e)}
+                    aria-label="다시 꾸미기"
+                    className="flex size-8 shrink-0 items-center justify-center rounded-full text-caption/60 active:bg-black/8 -mr-1.5"
+                  >
+                    <Pencil className="size-3.5" />
+                  </button>
+                </div>
               </div>
             </button>
           ))}
