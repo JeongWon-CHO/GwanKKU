@@ -29,9 +29,11 @@ export function GridCell({
     return (
       <div className="flex h-full w-full items-center justify-center">
         {placed && (
-          <span className="select-none text-2xl leading-none">
-            {placed.emoji}
-          </span>
+          placed.imageUrl ? (
+            <img src={placed.imageUrl} alt="" className="h-full w-full object-contain p-0.5 select-none" draggable={false} />
+          ) : (
+            <span className="select-none text-2xl leading-none">{placed.emoji}</span>
+          )
         )}
       </div>
     );
@@ -44,24 +46,30 @@ export function GridCell({
     <button
       onClick={onTap}
       className={cn(
-        "relative flex h-full w-full items-center justify-center transition-colors active:bg-white/10",
+        "relative flex h-full w-full items-center justify-center overflow-hidden transition-colors active:bg-white/10",
         isPlaceable &&
           (lightPanel
             ? "bg-black/5 ring-1 ring-inset ring-black/25"
             : "bg-white/10 ring-1 ring-inset ring-white/30"),
-        isRemovable && (lightPanel ? "bg-black/[0.06]" : "bg-white/[0.06]"),
+        isRemovable && (lightPanel ? "bg-black/6" : "bg-white/6"),
       )}
     >
       {placed && (
-        <span
-          key={placed.itemId}
-          className={cn(
-            "select-none text-2xl leading-none animate-pop",
-            isRemovable && "opacity-50",
-          )}
-        >
-          {placed.emoji}
-        </span>
+        placed.imageUrl ? (
+          <img
+            src={placed.imageUrl}
+            alt=""
+            className={cn("h-full w-full object-contain p-0.5 select-none", isRemovable && "opacity-50")}
+            draggable={false}
+          />
+        ) : (
+          <span
+            key={placed.itemId}
+            className={cn("select-none text-2xl leading-none animate-pop", isRemovable && "opacity-50")}
+          >
+            {placed.emoji}
+          </span>
+        )
       )}
 
       {/* 삭제 힌트 오버레이 — clipPath 내에서 항상 보이도록 셀 중앙 배치

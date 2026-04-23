@@ -1,5 +1,7 @@
 export type EditorTarget = 'coffin' | 'urn' | 'funeral' | 'grave'
 
+export type { PatternId } from '@/constants/editor-patterns'
+
 export type DecorationItemType = 'ribbon' | 'sticker' | 'flower' | 'symbol'
 
 export type EditorItem = {
@@ -47,7 +49,13 @@ export type FaceConfig = {
 export type PlacedDecoration = {
   itemId: string
   emoji: string
+  imageUrl?: string
   decorationType: DecorationItemType
+}
+
+export type UploadedImage = {
+  id: string
+  dataUrl: string
 }
 
 export type GridState = Partial<Record<GridKey, PlacedDecoration>>
