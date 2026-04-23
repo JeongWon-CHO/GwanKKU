@@ -86,7 +86,7 @@ export function CoffinBoard({ backgroundColor, face, width = 240, height = 360 }
   )
 }
 
-// ── 완성·공유 화면용 (160×240, non-interactive) ────────────
+// ── 완성·공유 화면용 (200×300, non-interactive) ────────────
 // 항상 정면(rect) shape로 고정 렌더링
 export function CoffinPreviewSmall({ backgroundColor }: PreviewProps) {
   const { viewBox, outer, inner, clip } = SHAPES.rect
@@ -97,10 +97,10 @@ export function CoffinPreviewSmall({ backgroundColor }: PreviewProps) {
     <div
       style={{
         position: 'relative',
-        width: 160,
-        height: 240,
+        width: 200,
+        height: 300,
         flexShrink: 0,
-        filter: 'drop-shadow(0 6px 16px rgba(0,0,0,0.12))',
+        filter: 'drop-shadow(0 8px 24px rgba(0,0,0,0.14))',
       }}
     >
       <CoffinSvg
@@ -108,8 +108,8 @@ export function CoffinPreviewSmall({ backgroundColor }: PreviewProps) {
         outerPoints={outer}
         innerPoints={inner}
         viewBox={viewBox}
-        width={160}
-        height={240}
+        width={200}
+        height={300}
       />
 
       <div
