@@ -1,8 +1,10 @@
 'use client'
 
+import { useEditorStore } from '@/store/useEditorStore'
 import { DecorationGrid } from './DecorationGrid'
 import { FACE_CONFIGS } from '@/constants/editor-faces'
-import { deriveFrameColor, deriveGrooveColor } from '@/lib/utils'
+import { getPatternStyle } from '@/constants/editor-patterns'
+import { deriveFrameColor, deriveGrooveColor, isLight } from '@/lib/utils'
 import type { FaceShape, FaceKey } from '@/types/editor'
 
 type BoardProps = {
@@ -50,6 +52,8 @@ const SHAPES: Record<FaceShape, { viewBox: string; outer: string; inner: string;
 export function CoffinBoard({ backgroundColor, face, width = 240, height = 360 }: BoardProps) {
   const { shape } = FACE_CONFIGS[face]
   const { viewBox, outer, inner, clip } = SHAPES[shape]
+  const backgroundPatternId = useEditorStore((s) => s.backgroundPatternId)
+  const patternStyle = getPatternStyle(backgroundPatternId, isLight(backgroundColor))
 
   return (
     <div
@@ -71,6 +75,11 @@ export function CoffinBoard({ backgroundColor, face, width = 240, height = 360 }
       />
 
       <div style={{ position: 'absolute', inset: 0, clipPath: clip }}>
+        {patternStyle && (
+          <div
+            style={{ position: 'absolute', inset: 0, pointerEvents: 'none', ...patternStyle }}
+          />
+        )}
         <DecorationGrid interactive={true} />
       </div>
     </div>
@@ -81,6 +90,8 @@ export function CoffinBoard({ backgroundColor, face, width = 240, height = 360 }
 // 항상 정면(rect) shape로 고정 렌더링
 export function CoffinPreviewSmall({ backgroundColor }: PreviewProps) {
   const { viewBox, outer, inner, clip } = SHAPES.rect
+  const backgroundPatternId = useEditorStore((s) => s.backgroundPatternId)
+  const patternStyle = getPatternStyle(backgroundPatternId, isLight(backgroundColor))
 
   return (
     <div
@@ -109,6 +120,11 @@ export function CoffinPreviewSmall({ backgroundColor }: PreviewProps) {
           pointerEvents: 'none',
         }}
       >
+        {patternStyle && (
+          <div
+            style={{ position: 'absolute', inset: 0, pointerEvents: 'none', ...patternStyle }}
+          />
+        )}
         <DecorationGrid interactive={false} />
       </div>
     </div>

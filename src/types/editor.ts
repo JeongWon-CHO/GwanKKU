@@ -1,5 +1,7 @@
 export type EditorTarget = 'coffin' | 'urn' | 'funeral' | 'grave'
 
+export type { PatternId } from '@/constants/editor-patterns'
+
 export type DecorationItemType = 'ribbon' | 'sticker' | 'flower' | 'symbol'
 
 export type EditorItem = {

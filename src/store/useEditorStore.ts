@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import type { EditorTarget, FaceKey, GridKey, GridState, MessageStyle, PlacedDecoration, UploadedImage } from '@/types/editor'
+import type { PatternId } from '@/constants/editor-patterns'
 
 const DEFAULT_BACKGROUND = '#faf7f0'
 const DEFAULT_FACE: FaceKey = 'front'
@@ -20,6 +21,7 @@ const emptyFaceGrids = (): Record<FaceKey, GridState> => ({
 type EditorStore = {
   target: EditorTarget | null
   backgroundColor: string
+  backgroundPatternId: PatternId
   faceGrids: Record<FaceKey, GridState>
   activeFace: FaceKey
   activeItemId: string | null
@@ -28,6 +30,7 @@ type EditorStore = {
   uploadedImages: UploadedImage[]
   setTarget: (target: EditorTarget) => void
   setBackgroundColor: (color: string) => void
+  setBackgroundPatternId: (id: PatternId) => void
   setActiveFace: (face: FaceKey) => void
   setActiveItem: (itemId: string | null) => void
   placeItem: (key: GridKey, decoration: PlacedDecoration) => void
@@ -42,6 +45,7 @@ type EditorStore = {
 export const useEditorStore = create<EditorStore>((set) => ({
   target: null,
   backgroundColor: DEFAULT_BACKGROUND,
+  backgroundPatternId: 'none',
   faceGrids: emptyFaceGrids(),
   activeFace: DEFAULT_FACE,
   activeItemId: null,
@@ -52,6 +56,8 @@ export const useEditorStore = create<EditorStore>((set) => ({
   setTarget: (target) => set({ target }),
 
   setBackgroundColor: (color) => set({ backgroundColor: color }),
+
+  setBackgroundPatternId: (id) => set({ backgroundPatternId: id }),
 
   setActiveFace: (face) => set({ activeFace: face, activeItemId: null }),
 
@@ -98,6 +104,7 @@ export const useEditorStore = create<EditorStore>((set) => ({
     set({
       target: null,
       backgroundColor: DEFAULT_BACKGROUND,
+      backgroundPatternId: 'none',
       faceGrids: emptyFaceGrids(),
       activeFace: DEFAULT_FACE,
       activeItemId: null,

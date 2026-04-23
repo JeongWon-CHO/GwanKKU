@@ -4,7 +4,8 @@ import { useRef, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useEditorStore } from "@/store/useEditorStore";
 import { COFFIN_CATEGORIES } from "@/constants/editor-coffin";
-import { cn } from "@/lib/utils";
+import { PATTERN_DEFS, getPatternStyle } from "@/constants/editor-patterns";
+import { cn, isLight } from "@/lib/utils";
 import type { DecorationItemType } from "@/types/editor";
 
 const DECO_PAGE_SIZE = 8;
@@ -69,9 +70,11 @@ export function DecorationPanel() {
 
   const {
     backgroundColor,
+    backgroundPatternId,
     activeItemId,
     uploadedImages,
     setBackgroundColor,
+    setBackgroundPatternId,
     setActiveItem,
     addUploadedImage,
     removeUploadedImage,
@@ -135,21 +138,55 @@ export function DecorationPanel() {
       <div className="h-50 overflow-y-auto overscroll-contain">
         {/* 배경 */}
         {activeTab === "background" && (
-          <div className="grid grid-cols-6 gap-3 px-2 py-2">
-            {backgroundItems.map((item) => (
-              <button
-                key={item.id}
-                onClick={() => setBackgroundColor(item.value)}
-                title={item.label}
-                className={cn(
-                  "aspect-square rounded-full transition-transform active:scale-90",
-                  backgroundColor === item.value
-                    ? "ring-2 ring-accent ring-offset-2 ring-offset-background"
-                    : "ring-1 ring-line",
-                )}
-                style={{ backgroundColor: item.value }}
-              />
-            ))}
+          <div className="flex flex-col gap-4 px-2 py-2">
+            {/* 색상 */}
+            <div className="grid grid-cols-6 gap-3">
+              {backgroundItems.map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => setBackgroundColor(item.value)}
+                  title={item.label}
+                  className={cn(
+                    "aspect-square rounded-full transition-transform active:scale-90",
+                    backgroundColor === item.value
+                      ? "ring-2 ring-accent ring-offset-2 ring-offset-background"
+                      : "ring-1 ring-line",
+                  )}
+                  style={{ backgroundColor: item.value }}
+                />
+              ))}
+            </div>
+
+            {/* 무늬 */}
+            <div className="flex flex-col gap-2">
+              <span className="text-xs text-caption">무늬</span>
+              <div className="grid grid-cols-4 gap-2">
+                {PATTERN_DEFS.map((p) => {
+                  const pStyle = getPatternStyle(p.id, isLight(backgroundColor));
+                  const isSelected = backgroundPatternId === p.id;
+                  return (
+                    <button
+                      key={p.id}
+                      onClick={() => setBackgroundPatternId(p.id)}
+                      className={cn(
+                        "flex flex-col items-center gap-1.5 rounded-xl p-1.5 transition-colors",
+                        isSelected
+                          ? "ring-2 ring-accent ring-offset-1 ring-offset-background"
+                          : "",
+                      )}
+                    >
+                      <div
+                        className="h-10 w-full rounded-lg"
+                        style={{ backgroundColor, ...(pStyle ?? {}) }}
+                      />
+                      <span className="text-xs leading-none text-caption">
+                        {p.label}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
           </div>
         )}
 
