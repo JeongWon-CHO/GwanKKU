@@ -6,6 +6,7 @@ import { Share2, ImageDown, RotateCcw, ArrowLeft } from "lucide-react";
 import { useEditorStore } from "@/store/useEditorStore";
 import { EDITOR_PRESETS } from "@/constants/editor-presets";
 import { saveSnapshot } from "@/lib/snapshot";
+import { saveSnapshotToServer } from "@/lib/snapshot-server";
 import { CoffinPreviewSmall } from "./CoffinBoard";
 import { SaveCard } from "./SaveCard";
 import { cn, isLight } from "@/lib/utils";
@@ -34,6 +35,14 @@ export function CompleteView() {
   const cardRef = useRef<HTMLDivElement>(null);
   const hasSavedRef = useRef(false);
 
+  // localStorage와 서버 저장이 같은 id를 공유하도록 분리
+  const [snapshotId] = useState(() => Date.now().toString(36));
+
+  // 서버 저장 상태
+  const [serverSaveStatus, setServerSaveStatus] = useState<'idle' | 'saving' | 'success' | 'error'>('idle');
+  const [savedVisibility, setSavedVisibility] = useState<'private' | 'public' | null>(null);
+  const [serverSaveError, setServerSaveError] = useState<string | null>(null);
+
   useEffect(() => {
     if (hasSavedRef.current || !target) return;
     // archive에서 불러온 경우 중복 저장 방지
@@ -41,7 +50,7 @@ export function CompleteView() {
     hasSavedRef.current = true;
     saveSnapshot({
       version: 1,
-      id: Date.now().toString(36),
+      id: snapshotId,
       createdAt: new Date().toISOString(),
       target,
       backgroundColor,
@@ -62,6 +71,36 @@ export function CompleteView() {
   if (!target) return null;
 
   const preset = EDITOR_PRESETS[target];
+
+  async function handleServerSave(isPublic: boolean) {
+    if (serverSaveStatus === 'saving' || !target) return;
+    const currentTarget = target;
+    setServerSaveStatus('saving');
+    setSavedVisibility(isPublic ? 'public' : 'private');
+    setServerSaveError(null);
+    try {
+      await saveSnapshotToServer(
+        {
+          version: 1,
+          id: snapshotId,
+          createdAt: new Date().toISOString(),
+          target: currentTarget,
+          backgroundColor,
+          backgroundPatternId,
+          faceGrids,
+          message,
+          messageStyle,
+          uploadedImages,
+        },
+        isPublic,
+      );
+      setServerSaveStatus('success');
+    } catch {
+      setServerSaveStatus('error');
+      setSavedVisibility(null);
+      setServerSaveError('저장에 실패했어요. 다시 시도해 주세요.');
+    }
+  }
   const light = isLight(backgroundColor);
   const isExporting = isSaving || isSharing;
 
@@ -160,11 +199,51 @@ export function CompleteView() {
 
       {/* 액션 영역 */}
       <section className="flex flex-col gap-3 px-4 py-6">
-        {/* 1순위: 이미지로 저장 */}
+        {/* 서버 저장 */}
+        <p className="text-center text-xs text-caption">관꾸에 저장하기</p>
+
+        {serverSaveStatus === 'success' ? (
+          <div className="flex flex-col items-center gap-2 rounded-2xl bg-surface py-4">
+            <p className="text-sm font-medium text-primary">저장됐어요</p>
+            <button
+              onClick={() =>
+                router.push(savedVisibility === 'public' ? '/gallery' : '/archive')
+              }
+              className="text-sm text-caption underline-offset-2 hover:underline"
+            >
+              {savedVisibility === 'public' ? '갤러리에서 보기' : '나의 보관함 보기'}
+            </button>
+          </div>
+        ) : (
+          <>
+            <button
+              onClick={() => handleServerSave(true)}
+              disabled={serverSaveStatus === 'saving'}
+              className="flex w-full items-center justify-center rounded-2xl bg-accent py-4 text-base font-medium text-accent-fg transition-opacity active:opacity-80 disabled:opacity-50"
+            >
+              {serverSaveStatus === 'saving' && savedVisibility === 'public' ? '저장 중...' : '공개 저장'}
+            </button>
+            <button
+              onClick={() => handleServerSave(false)}
+              disabled={serverSaveStatus === 'saving'}
+              className="flex w-full items-center justify-center rounded-2xl border border-line bg-background py-4 text-base font-medium text-primary transition-opacity active:opacity-80 disabled:opacity-50"
+            >
+              {serverSaveStatus === 'saving' && savedVisibility === 'private' ? '저장 중...' : '나만 보기'}
+            </button>
+            {serverSaveError && (
+              <p className="text-center text-xs text-caption">{serverSaveError}</p>
+            )}
+          </>
+        )}
+
+        {/* 구분 */}
+        <div className="my-1 h-px bg-line" />
+
+        {/* 이미지로 저장 */}
         <button
           onClick={handleSave}
           disabled={isExporting}
-          className="flex items-center justify-center gap-2 w-full rounded-2xl bg-accent py-4 text-base font-medium text-accent-fg transition-opacity active:opacity-80 disabled:opacity-50"
+          className="flex items-center justify-center gap-2 w-full rounded-2xl border border-line bg-background py-4 text-base font-medium text-primary transition-opacity active:opacity-80 disabled:opacity-50"
         >
           <ImageDown className="size-4" />
           {isSaving ? "저장 중..." : "이미지로 저장"}
@@ -173,7 +252,7 @@ export function CompleteView() {
           <p className="text-center text-xs text-caption">저장됐어요</p>
         )}
 
-        {/* 2순위: 공유하기 */}
+        {/* 공유하기 */}
         <button
           onClick={handleShare}
           disabled={isExporting}
@@ -188,7 +267,7 @@ export function CompleteView() {
           </p>
         )}
 
-        {/* 3순위: 다시 꾸미기 */}
+        {/* 다시 꾸미기 */}
         <button
           onClick={() => router.push("/editor/coffin")}
           disabled={isExporting}
