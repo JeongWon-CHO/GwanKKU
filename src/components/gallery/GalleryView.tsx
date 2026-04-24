@@ -104,6 +104,12 @@ export function GalleryView() {
           <h1 className="text-base font-medium text-primary">온라인 관짝함</h1>
           <p className="text-xs text-caption">사람들이 꾸민 관을 구경해요</p>
         </div>
+        <button
+          onClick={() => router.push('/archive')}
+          className="ml-auto text-xs text-caption underline-offset-2 hover:underline"
+        >
+          나의 보관함
+        </button>
       </header>
 
       {/* 정렬 탭 */}
