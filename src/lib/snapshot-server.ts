@@ -29,9 +29,19 @@ async function uploadImages(
   return keys
 }
 
+async function uploadPreview(clientId: string, blob: Blob): Promise<string> {
+  const key = `${clientId}/preview.png`
+  const { error } = await supabase.storage
+    .from('snapshot-images')
+    .upload(key, blob, { contentType: 'image/png', upsert: true })
+  if (error) throw error
+  return key
+}
+
 export async function saveSnapshotToServer(
   snapshot: CoffinSnapshot,
   isPublic: boolean,
+  previewBlob?: Blob,
 ): Promise<void> {
   const {
     id: clientId,
@@ -43,7 +53,12 @@ export async function saveSnapshotToServer(
     ...editorFields
   } = snapshot
 
-  const imageKeys = await uploadImages(clientId, uploadedImages)
+  const [imageKeys, previewKey] = await Promise.all([
+    uploadImages(clientId, uploadedImages),
+    previewBlob
+      ? uploadPreview(clientId, previewBlob).catch(() => null)
+      : Promise.resolve(null),
+  ])
 
   const { error } = await supabase.from('snapshots').insert({
     client_id: clientId,
@@ -54,6 +69,7 @@ export async function saveSnapshotToServer(
     message,
     editor_data: editorFields,
     image_keys: imageKeys,
+    preview_key: previewKey,
   })
 
   if (error) throw error

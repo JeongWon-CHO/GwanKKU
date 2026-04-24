@@ -31,22 +31,30 @@ function triggerDownload(blob: Blob, filename: string) {
 
 export function CompleteView() {
   const router = useRouter();
-  const { target, backgroundColor, backgroundPatternId, faceGrids, message, messageStyle, uploadedImages, reset } = useEditorStore();
+  const {
+    target,
+    backgroundColor,
+    backgroundPatternId,
+    faceGrids,
+    message,
+    messageStyle,
+    uploadedImages,
+    reset,
+  } = useEditorStore();
   const cardRef = useRef<HTMLDivElement>(null);
   const hasSavedRef = useRef(false);
 
-  // localStorage와 서버 저장이 같은 id를 공유하도록 분리
   const [snapshotId] = useState(() => Date.now().toString(36));
 
-  // 서버 저장 상태
-  const [serverSaveStatus, setServerSaveStatus] = useState<'idle' | 'saving' | 'success' | 'error'>('idle');
-  const [savedVisibility, setSavedVisibility] = useState<'private' | 'public' | null>(null);
+  const [serverSaveStatus, setServerSaveStatus] = useState<
+    "idle" | "saving" | "success" | "error"
+  >("idle");
   const [serverSaveError, setServerSaveError] = useState<string | null>(null);
 
   useEffect(() => {
     if (hasSavedRef.current || !target) return;
-    // archive에서 불러온 경우 중복 저장 방지
-    if (new URLSearchParams(window.location.search).get('from') === 'archive') return;
+    if (new URLSearchParams(window.location.search).get("from") === "archive")
+      return;
     hasSavedRef.current = true;
     saveSnapshot({
       version: 1,
@@ -71,14 +79,18 @@ export function CompleteView() {
   if (!target) return null;
 
   const preset = EDITOR_PRESETS[target];
+  const light = isLight(backgroundColor);
+  const isExporting = isSaving || isSharing;
 
-  async function handleServerSave(isPublic: boolean) {
-    if (serverSaveStatus === 'saving' || !target) return;
+  async function handlePublish() {
+    if (serverSaveStatus === "saving" || !target) return;
     const currentTarget = target;
-    setServerSaveStatus('saving');
-    setSavedVisibility(isPublic ? 'public' : 'private');
+    setServerSaveStatus("saving");
     setServerSaveError(null);
     try {
+      const previewBlob = cardRef.current
+        ? await cardToBlob(cardRef.current).catch(() => undefined)
+        : undefined;
       await saveSnapshotToServer(
         {
           version: 1,
@@ -92,17 +104,15 @@ export function CompleteView() {
           messageStyle,
           uploadedImages,
         },
-        isPublic,
+        true,
+        previewBlob,
       );
-      setServerSaveStatus('success');
+      setServerSaveStatus("success");
     } catch {
-      setServerSaveStatus('error');
-      setSavedVisibility(null);
-      setServerSaveError('저장에 실패했어요. 다시 시도해 주세요.');
+      setServerSaveStatus("error");
+      setServerSaveError("저장에 실패했어요. 다시 시도해 주세요.");
     }
   }
-  const light = isLight(backgroundColor);
-  const isExporting = isSaving || isSharing;
 
   async function handleSave() {
     if (!cardRef.current || isExporting) return;
@@ -113,7 +123,7 @@ export function CompleteView() {
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 2500);
     } catch {
-      // 실패 시 무시 — 사용자 인지 불필요
+      // 실패 시 무시
     } finally {
       setIsSaving(false);
     }
@@ -133,7 +143,6 @@ export function CompleteView() {
         .filter(Boolean)
         .join("\n");
 
-      // 이미지 파일 공유 (Web Share API Level 2 — iOS 15+, Android Chrome 86+)
       const file = new File([blob], "gwankku.png", { type: "image/png" });
 
       if (navigator.canShare?.({ files: [file] })) {
@@ -150,11 +159,6 @@ export function CompleteView() {
     }
   }
 
-  function handleRestart() {
-    reset();
-    router.push("/");
-  }
-
   return (
     <main className="flex min-h-screen flex-col">
       {/* 헤더 */}
@@ -167,6 +171,12 @@ export function CompleteView() {
           <ArrowLeft className="size-4 text-body" />
         </button>
         <h1 className="text-base font-medium text-primary">완성됐어요</h1>
+        <button
+          onClick={() => router.push("/archive")}
+          className="ml-auto text-xs text-caption underline-offset-2 hover:underline"
+        >
+          나의 보관함
+        </button>
       </header>
 
       {/* 완성 미리보기 */}
@@ -199,39 +209,32 @@ export function CompleteView() {
 
       {/* 액션 영역 */}
       <section className="flex flex-col gap-3 px-4 py-6">
-        {/* 서버 저장 */}
-        <p className="text-center text-xs text-caption">관꾸에 저장하기</p>
-
-        {serverSaveStatus === 'success' ? (
+        {/* 온라인 관짝함 등재 */}
+        {serverSaveStatus === "success" ? (
           <div className="flex flex-col items-center gap-2 rounded-2xl bg-surface py-4">
-            <p className="text-sm font-medium text-primary">저장됐어요</p>
+            <p className="text-sm font-medium text-primary">등재됐어요</p>
             <button
-              onClick={() =>
-                router.push(savedVisibility === 'public' ? '/gallery' : '/archive')
-              }
+              onClick={() => router.push("/gallery")}
               className="text-sm text-caption underline-offset-2 hover:underline"
             >
-              {savedVisibility === 'public' ? '갤러리에서 보기' : '나의 보관함 보기'}
+              온라인 관짝함에서 보기
             </button>
           </div>
         ) : (
           <>
             <button
-              onClick={() => handleServerSave(true)}
-              disabled={serverSaveStatus === 'saving'}
+              onClick={handlePublish}
+              disabled={serverSaveStatus === "saving"}
               className="flex w-full items-center justify-center rounded-2xl bg-accent py-4 text-base font-medium text-accent-fg transition-opacity active:opacity-80 disabled:opacity-50"
             >
-              {serverSaveStatus === 'saving' && savedVisibility === 'public' ? '저장 중...' : '공개 저장'}
-            </button>
-            <button
-              onClick={() => handleServerSave(false)}
-              disabled={serverSaveStatus === 'saving'}
-              className="flex w-full items-center justify-center rounded-2xl border border-line bg-background py-4 text-base font-medium text-primary transition-opacity active:opacity-80 disabled:opacity-50"
-            >
-              {serverSaveStatus === 'saving' && savedVisibility === 'private' ? '저장 중...' : '나만 보기'}
+              {serverSaveStatus === "saving"
+                ? "올리는 중..."
+                : "명예의 전당에 공개하기"}
             </button>
             {serverSaveError && (
-              <p className="text-center text-xs text-caption">{serverSaveError}</p>
+              <p className="text-center text-xs text-caption">
+                {serverSaveError}
+              </p>
             )}
           </>
         )}
@@ -239,64 +242,58 @@ export function CompleteView() {
         {/* 구분 */}
         <div className="my-1 h-px bg-line" />
 
-        {/* 이미지로 저장 */}
-        <button
-          onClick={handleSave}
-          disabled={isExporting}
-          className="flex items-center justify-center gap-2 w-full rounded-2xl border border-line bg-background py-4 text-base font-medium text-primary transition-opacity active:opacity-80 disabled:opacity-50"
-        >
-          <ImageDown className="size-4" />
-          {isSaving ? "저장 중..." : "이미지로 저장"}
-        </button>
+        {/* 이미지 저장 + 공유하기 */}
+        <div className="flex gap-2">
+          <button
+            onClick={handleSave}
+            disabled={isExporting}
+            className="flex flex-1 items-center justify-center gap-2 rounded-2xl border border-line bg-background py-3.5 text-sm font-medium text-primary transition-opacity active:opacity-80 disabled:opacity-50"
+          >
+            <ImageDown className="size-4" />
+            {isSaving ? "저장 중..." : "이미지 저장"}
+          </button>
+          <button
+            onClick={handleShare}
+            disabled={isExporting}
+            className="flex flex-1 items-center justify-center gap-2 rounded-2xl border border-line bg-background py-3.5 text-sm font-medium text-primary transition-opacity active:opacity-80 disabled:opacity-50"
+          >
+            <Share2 className="size-4" />
+            {isSharing ? "준비 중..." : "공유하기"}
+          </button>
+        </div>
         {saveSuccess && (
-          <p className="text-center text-xs text-caption">저장됐어요</p>
+          <p className="text-center text-xs text-caption">
+            이미지가 저장됐어요
+          </p>
         )}
-
-        {/* 공유하기 */}
-        <button
-          onClick={handleShare}
-          disabled={isExporting}
-          className="flex items-center justify-center gap-2 w-full rounded-2xl border border-line bg-background py-4 text-base font-medium text-primary transition-opacity active:opacity-80 disabled:opacity-50"
-        >
-          <Share2 className="size-4" />
-          {isSharing ? "준비 중..." : "공유하기"}
-        </button>
         {shareError && (
           <p className="text-center text-xs text-caption">
             이 브라우저에서는 공유가 지원되지 않아요
           </p>
         )}
+      </section>
 
-        {/* 다시 꾸미기 */}
+      {/* 하단 보조 액션 */}
+      <div className="flex flex-col items-center gap-10 pb-10">
         <button
           onClick={() => router.push("/editor/coffin")}
-          disabled={isExporting}
-          className="flex items-center justify-center gap-2 w-full rounded-2xl border border-line bg-background py-3.5 text-sm font-medium text-body transition-opacity active:opacity-80 disabled:opacity-50"
+          className="text-sm text-caption underline-offset-2 hover:underline"
         >
           다시 꾸미기
         </button>
-      </section>
-
-      <div className="flex flex-col items-center gap-3 pb-10">
         <button
-          onClick={() => router.push('/archive')}
-          className="text-sm text-caption underline-offset-2 hover:underline"
-        >
-          나의 보관함 보기
-        </button>
-        <button
-          onClick={handleRestart}
-          className={cn(
-            "flex items-center gap-1.5 text-sm text-caption",
-            "underline-offset-2 hover:underline",
-          )}
+          onClick={() => {
+            reset();
+            router.push("/");
+          }}
+          className="flex items-center gap-1.5 text-sm text-caption underline-offset-2 hover:underline"
         >
           <RotateCcw className="size-3.5" />
           처음으로 돌아가기
         </button>
       </div>
 
-      {/* 저장/공유용 SaveCard — 화면 밖 렌더링, 캡처 전용 */}
+      {/* 캡처 전용 SaveCard */}
       <div
         aria-hidden="true"
         style={{
