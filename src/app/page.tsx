@@ -20,12 +20,20 @@ export default function LandingPage() {
           <span>✦ 취향에 맞게 나만의 공간을 꾸며보세요</span>
         </div>
 
-        <Link
-          href="/test"
-          className="mt-4 rounded-full bg-accent px-8 py-3 text-sm font-medium text-accent-fg transition-opacity hover:opacity-80"
-        >
-          죽음을 장식하러 가기
-        </Link>
+        <div className="mt-4 flex w-full max-w-xs flex-col gap-3">
+          <Link
+            href="/test"
+            className="rounded-full bg-accent px-8 py-3 text-center text-sm font-medium text-accent-fg transition-opacity hover:opacity-80"
+          >
+            내 관 꾸미기
+          </Link>
+          <Link
+            href="/gallery"
+            className="rounded-full border border-line px-8 py-3 text-center text-sm text-body transition-opacity hover:opacity-70"
+          >
+            온라인 관짝함 둘러보기
+          </Link>
+        </div>
       </div>
 
       <p className="text-xs text-caption">관꾸 · 나를 위한 작은 준비</p>
