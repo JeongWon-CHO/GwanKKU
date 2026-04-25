@@ -29,6 +29,10 @@ type EditorStore = {
   message: string
   messageStyle: MessageStyle
   uploadedImages: UploadedImage[]
+  // 현재 세션 내 등재 상태 관리용.
+  // 페이지 reload 시 초기화되나, reload 후엔 target=null로 /complete 접근 자체가 불가.
+  // 추후 /complete 복원 구조가 생기면 localStorage나 서버 상태로 승격 필요.
+  hasPublished: boolean
   setTarget: (target: EditorTarget) => void
   setBackgroundColor: (color: string) => void
   setBackgroundPatternId: (id: PatternId) => void
@@ -41,6 +45,7 @@ type EditorStore = {
   addUploadedImage: (img: UploadedImage) => void
   removeUploadedImage: (id: string) => void
   loadFromSnapshot: (snapshot: CoffinSnapshot) => void
+  setHasPublished: () => void
   reset: () => void
 }
 
@@ -54,6 +59,7 @@ export const useEditorStore = create<EditorStore>((set) => ({
   message: '',
   messageStyle: DEFAULT_MESSAGE_STYLE,
   uploadedImages: [],
+  hasPublished: false,
 
   setTarget: (target) => set({ target }),
 
@@ -115,6 +121,8 @@ export const useEditorStore = create<EditorStore>((set) => ({
       uploadedImages: snapshot.uploadedImages,
     }),
 
+  setHasPublished: () => set({ hasPublished: true }),
+
   reset: () =>
     set({
       target: null,
@@ -126,5 +134,6 @@ export const useEditorStore = create<EditorStore>((set) => ({
       message: '',
       messageStyle: DEFAULT_MESSAGE_STYLE,
       uploadedImages: [],
+      hasPublished: false,
     }),
 }))

@@ -49,7 +49,9 @@ export function CompleteView() {
     message,
     messageStyle,
     uploadedImages,
+    hasPublished,
     loadFromSnapshot,
+    setHasPublished,
     reset,
   } = useEditorStore();
   const cardRef = useRef<HTMLDivElement>(null);
@@ -118,6 +120,7 @@ export function CompleteView() {
     saveSnapshotToServer(snapshot, true, undefined, user.id)
       .then(() => {
         setServerSaveStatus("success");
+        setHasPublished();
         clearPendingAction();
         router.replace("/complete");
       })
@@ -177,6 +180,7 @@ export function CompleteView() {
         : undefined;
       await saveSnapshotToServer(currentSnapshot, true, previewBlob, user.id);
       setServerSaveStatus("success");
+      setHasPublished();
     } catch {
       setServerSaveStatus("error");
       setServerSaveError("저장에 실패했어요. 다시 시도해 주세요.");
@@ -284,34 +288,42 @@ export function CompleteView() {
       {/* 액션 영역 */}
       <section className="flex flex-col gap-3 px-4 py-6">
         {/* 온라인 관짝함 등재 */}
-        {serverSaveStatus === "success" ? (
-          <div className="flex flex-col items-center gap-2 rounded-2xl bg-surface py-4">
-            <p className="text-sm font-medium text-primary">등재됐어요</p>
-            <button
-              onClick={() => router.push("/gallery")}
-              className="text-sm text-caption underline-offset-2 hover:underline"
-            >
-              온라인 관짝함에서 보기
-            </button>
-          </div>
-        ) : (
-          <>
-            <button
-              onClick={handlePublish}
-              disabled={serverSaveStatus === "saving" || authLoading}
-              className="flex w-full items-center justify-center rounded-2xl bg-accent py-4 text-base font-medium text-accent-fg transition-opacity active:opacity-80 disabled:opacity-50"
-            >
-              {serverSaveStatus === "saving"
-                ? "올리는 중..."
-                : "명예의 전당에 공개하기"}
-            </button>
-            {serverSaveError && (
-              <p className="text-center text-xs text-caption">
-                {serverSaveError}
-              </p>
-            )}
-          </>
-        )}
+        {(() => {
+          const isPublished = hasPublished || serverSaveStatus === "success";
+          if (isPublished) {
+            return (
+              <div className="flex flex-col items-center gap-2 rounded-2xl bg-surface py-4">
+                <p className="text-sm font-medium text-primary">
+                  이미 명예의 전당에 올라갔어요
+                </p>
+                <button
+                  onClick={() => router.push("/gallery")}
+                  className="text-sm text-caption underline-offset-2 hover:underline"
+                >
+                  온라인 관짝함에서 보기
+                </button>
+              </div>
+            );
+          }
+          return (
+            <>
+              <button
+                onClick={handlePublish}
+                disabled={serverSaveStatus === "saving" || authLoading}
+                className="flex w-full items-center justify-center rounded-2xl bg-accent py-4 text-base font-medium text-accent-fg transition-opacity active:opacity-80 disabled:opacity-50"
+              >
+                {serverSaveStatus === "saving"
+                  ? "등재 중..."
+                  : "명예의 전당에 공개하기"}
+              </button>
+              {serverSaveError && (
+                <p className="text-center text-xs text-caption">
+                  {serverSaveError}
+                </p>
+              )}
+            </>
+          );
+        })()}
 
         {/* 구분 */}
         <div className="my-1 h-px bg-line" />
