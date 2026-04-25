@@ -58,7 +58,11 @@ export function CompleteView() {
   const hasSavedRef = useRef(false);
   const hasResumedRef = useRef(false);
 
-  const [snapshotId] = useState(() => Date.now().toString(36));
+  const [snapshotId] = useState(() => {
+    const params = new URLSearchParams(window.location.search)
+    return params.get('sid') || Date.now().toString(36)
+  })
+  const fromArchive = new URLSearchParams(window.location.search).get('from') === 'archive';
   const [isSheetOpen, setIsSheetOpen] = useState(false);
 
   const [serverSaveStatus, setServerSaveStatus] = useState<
@@ -160,8 +164,8 @@ export function CompleteView() {
       uploadedImages,
     };
 
-    // ?from=archive 경로는 자동 저장이 안 됐으므로 여기서 보장
-    if (!hasSavedRef.current) {
+    // ?from=archive 경로는 스냅샷이 이미 localStorage에 있으므로 재저장하지 않음
+    if (!hasSavedRef.current && !fromArchive) {
       saveSnapshot(currentSnapshot);
       hasSavedRef.current = true;
     }

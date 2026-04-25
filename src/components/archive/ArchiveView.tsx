@@ -5,6 +5,7 @@ import { ArrowLeft, Archive, Pencil } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { useArchiveSnapshots } from '@/hooks/useArchiveSnapshots'
 import { useEditorStore } from '@/store/useEditorStore'
+import { signInWithGoogle, signOut } from '@/lib/auth'
 import { SnapshotThumbnail } from '@/components/archive/SnapshotThumbnail'
 import type { CoffinSnapshot } from '@/types/snapshot'
 
@@ -21,7 +22,7 @@ export function ArchiveView() {
 
   function handleView(snapshot: CoffinSnapshot) {
     loadFromSnapshot(snapshot)
-    router.push('/complete?from=archive')
+    router.push(`/complete?from=archive&sid=${snapshot.id}`)
   }
 
   function handleEdit(snapshot: CoffinSnapshot, e: React.MouseEvent) {
@@ -44,11 +45,19 @@ export function ArchiveView() {
           <ArrowLeft className="size-4 text-body" />
         </button>
         <h1 className="text-base font-medium text-primary">나의 보관함</h1>
-        {!loading && count > 0 && (
-          <span className="ml-auto text-xs text-caption">
-            {isLoggedIn ? `${count}개` : `${count} / 5`}
-          </span>
-        )}
+        <div className="ml-auto flex items-center gap-3">
+          {!loading && count > 0 && !isLoggedIn && (
+            <span className="text-xs text-caption">{count} / 5</span>
+          )}
+          {!authLoading && isLoggedIn && (
+            <button
+              onClick={() => signOut()}
+              className="text-xs text-caption transition-opacity hover:opacity-70"
+            >
+              로그아웃
+            </button>
+          )}
+        </div>
       </header>
 
       {loading || authLoading ? (
@@ -119,6 +128,14 @@ function EmptyState({ isLoggedIn }: { isLoggedIn: boolean }) {
       >
         관 꾸미러 가기
       </button>
+      {!isLoggedIn && (
+        <button
+          onClick={() => signInWithGoogle('/archive')}
+          className="text-xs text-caption underline underline-offset-2 transition-opacity hover:opacity-70"
+        >
+          로그인하면 어디서든 볼 수 있어요
+        </button>
+      )}
     </div>
   )
 }

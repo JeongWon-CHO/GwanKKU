@@ -2,7 +2,7 @@ import { supabase } from './supabase'
 import { saveSnapshot } from './snapshot'
 import type { GallerySnapshot, SortOrder } from '@/types/gallery'
 
-const SELECT_FIELDS = 'id, client_id, target, message, editor_data, like_count, created_at'
+const SELECT_FIELDS = 'id, client_id, user_id, target, message, editor_data, like_count, created_at'
 
 export async function fetchGallerySnapshots(sort: SortOrder): Promise<GallerySnapshot[]> {
   const base = supabase

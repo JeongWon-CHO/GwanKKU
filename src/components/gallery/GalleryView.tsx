@@ -9,6 +9,7 @@ import {
   decrementLike,
   saveGallerySnapshotToArchive,
 } from '@/lib/gallery'
+import { useAuth } from '@/hooks/useAuth'
 import { useLikedSnapshots } from '@/hooks/useLikedSnapshots'
 import { SnapshotThumbnail } from '@/components/archive/SnapshotThumbnail'
 import { cn } from '@/lib/utils'
@@ -37,6 +38,7 @@ function formatDate(iso: string): string {
 
 export function GalleryView() {
   const router = useRouter()
+  const { user } = useAuth()
   const [sort, setSort] = useState<SortOrder>('latest')
   const [snapshots, setSnapshots] = useState<GallerySnapshot[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -142,6 +144,7 @@ export function GalleryView() {
               snapshot={snapshot}
               liked={isLiked(snapshot.id)}
               saved={savedIds.has(snapshot.id)}
+              isOwn={!!user && snapshot.user_id === user.id}
               onLike={() => handleLike(snapshot)}
               onSave={() => handleSave(snapshot)}
             />
@@ -156,11 +159,12 @@ type CardProps = {
   snapshot: GallerySnapshot
   liked: boolean
   saved: boolean
+  isOwn: boolean
   onLike: () => void
   onSave: () => void
 }
 
-function GalleryCard({ snapshot, liked, saved, onLike, onSave }: CardProps) {
+function GalleryCard({ snapshot, liked, saved, isOwn, onLike, onSave }: CardProps) {
   return (
     <div className="flex flex-col overflow-hidden rounded-2xl bg-surface">
       <SnapshotThumbnail snapshot={toThumbnailSnapshot(snapshot)} />
@@ -199,13 +203,15 @@ function GalleryCard({ snapshot, liked, saved, onLike, onSave }: CardProps) {
             {liked ? '♥ 추천했어요' : '♡ 추천하기'}
           </button>
 
-          <button
-            onClick={onSave}
-            disabled={saved}
-            className="w-full rounded-xl border border-line py-1.5 text-xs text-caption transition-colors hover:text-body disabled:border-transparent disabled:text-caption/50"
-          >
-            {saved ? '보관함에 저장됐어요' : '내 디자인으로 저장'}
-          </button>
+          {!isOwn && (
+            <button
+              onClick={onSave}
+              disabled={saved}
+              className="w-full rounded-xl border border-line py-1.5 text-xs text-caption transition-colors hover:text-body disabled:border-transparent disabled:text-caption/50"
+            >
+              {saved ? '보관함에 저장됐어요' : '내 디자인으로 저장'}
+            </button>
+          )}
         </div>
       </div>
     </div>
