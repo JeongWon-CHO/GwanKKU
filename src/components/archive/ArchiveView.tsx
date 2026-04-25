@@ -6,6 +6,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { useArchiveSnapshots } from '@/hooks/useArchiveSnapshots'
 import { useEditorStore } from '@/store/useEditorStore'
 import { signInWithGoogle, signOut } from '@/lib/auth'
+import { saveCoffinView } from '@/lib/coffin-view'
 import { SnapshotThumbnail } from '@/components/archive/SnapshotThumbnail'
 import type { CoffinSnapshot } from '@/types/snapshot'
 
@@ -21,8 +22,8 @@ export function ArchiveView() {
   const loadFromSnapshot = useEditorStore((s) => s.loadFromSnapshot)
 
   function handleView(snapshot: CoffinSnapshot) {
-    loadFromSnapshot(snapshot)
-    router.push(`/complete?from=archive&sid=${snapshot.id}`)
+    saveCoffinView(snapshot)
+    router.push(`/coffin/${snapshot.id}`)
   }
 
   function handleEdit(snapshot: CoffinSnapshot, e: React.MouseEvent) {

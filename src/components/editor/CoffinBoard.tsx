@@ -3,9 +3,10 @@
 import { useEditorStore } from '@/store/useEditorStore'
 import { DecorationGrid } from './DecorationGrid'
 import { FACE_CONFIGS } from '@/constants/editor-faces'
+import { COFFIN_SHAPES } from '@/constants/coffin-shapes'
 import { getPatternStyle } from '@/constants/editor-patterns'
 import { deriveFrameColor, deriveGrooveColor, isLight } from '@/lib/utils'
-import type { FaceShape, FaceKey } from '@/types/editor'
+import type { FaceKey } from '@/types/editor'
 
 type BoardProps = {
   backgroundColor: string
@@ -18,40 +19,11 @@ type PreviewProps = {
   backgroundColor: string
 }
 
-// ── 면 shape별 SVG 좌표 ──────────────────────────────────────
-//
-// octagon (정면/후면): 240×360 viewBox, 어깨 60px 컷 관 실루엣
-// rect    (세로 측면): 240×360 viewBox, 24px 베벨 장방형
-// rect-h  (가로 측면): 300×150 viewBox, 20px 베벨 가로형 패널
-//
-const SHAPES: Record<FaceShape, { viewBox: string; outer: string; inner: string; clip: string }> = {
-  octagon: {
-    viewBox: '0 0 240 360',
-    outer: '60,0 180,0 240,54 240,306 180,360 60,360 0,306 0,54',
-    inner: '76,16 164,16 224,70 224,290 164,344 76,344 16,290 16,70',
-    clip: 'polygon(31.7% 4.4%, 68.3% 4.4%, 93.3% 19.4%, 93.3% 80.6%, 68.3% 95.6%, 31.7% 95.6%, 6.7% 80.6%, 6.7% 19.4%)',
-  },
-  rect: {
-    viewBox: '0 0 240 360',
-    outer: '0,24 24,0 216,0 240,24 240,336 216,360 24,360 0,336',
-    inner: '16,36 40,16 200,16 224,36 224,324 200,344 40,344 16,324',
-    clip: 'polygon(6.7% 10%, 16.7% 4.4%, 83.3% 4.4%, 93.3% 10%, 93.3% 90%, 83.3% 95.6%, 16.7% 95.6%, 6.7% 90%)',
-  },
-  'rect-h': {
-    viewBox: '0 0 300 150',
-    // 20px 베벨 코너, outer 테두리
-    outer: '0,20 20,0 280,0 300,20 300,130 280,150 20,150 0,130',
-    // 10px 추가 인셋, inner 패널 면
-    inner: '10,26 26,10 274,10 290,26 290,124 274,140 26,140 10,124',
-    // inner 좌표를 300×150 기준 퍼센트로 변환
-    clip: 'polygon(3.3% 17.3%, 8.7% 6.7%, 91.3% 6.7%, 96.7% 17.3%, 96.7% 82.7%, 91.3% 93.3%, 8.7% 93.3%, 3.3% 82.7%)',
-  },
-}
 
 // ── 편집용 관 보드 ──────────────────────────────────────────
 export function CoffinBoard({ backgroundColor, face, width = 240, height = 360 }: BoardProps) {
   const { shape } = FACE_CONFIGS[face]
-  const { viewBox, outer, inner, clip } = SHAPES[shape]
+  const { viewBox, outer, inner, clip } = COFFIN_SHAPES[shape]
   const backgroundPatternId = useEditorStore((s) => s.backgroundPatternId)
   const patternStyle = getPatternStyle(backgroundPatternId, isLight(backgroundColor))
 
@@ -89,7 +61,7 @@ export function CoffinBoard({ backgroundColor, face, width = 240, height = 360 }
 // ── 완성·공유 화면용 (200×300, non-interactive) ────────────
 // 항상 정면(rect) shape로 고정 렌더링
 export function CoffinPreviewSmall({ backgroundColor }: PreviewProps) {
-  const { viewBox, outer, inner, clip } = SHAPES.rect
+  const { viewBox, outer, inner, clip } = COFFIN_SHAPES.rect
   const backgroundPatternId = useEditorStore((s) => s.backgroundPatternId)
   const patternStyle = getPatternStyle(backgroundPatternId, isLight(backgroundColor))
 
