@@ -2,7 +2,8 @@
 
 import { useRouter } from 'next/navigation'
 import { ArrowLeft, Archive, Pencil } from 'lucide-react'
-import { useSnapshots } from '@/hooks/useSnapshots'
+import { useAuth } from '@/hooks/useAuth'
+import { useArchiveSnapshots } from '@/hooks/useArchiveSnapshots'
 import { useEditorStore } from '@/store/useEditorStore'
 import { SnapshotThumbnail } from '@/components/archive/SnapshotThumbnail'
 import type { CoffinSnapshot } from '@/types/snapshot'
@@ -14,7 +15,8 @@ function formatDate(iso: string): string {
 
 export function ArchiveView() {
   const router = useRouter()
-  const snapshots = useSnapshots()
+  const { user, loading: authLoading } = useAuth()
+  const { snapshots, loading } = useArchiveSnapshots(user)
   const loadFromSnapshot = useEditorStore((s) => s.loadFromSnapshot)
 
   function handleView(snapshot: CoffinSnapshot) {
@@ -28,6 +30,9 @@ export function ArchiveView() {
     router.push('/editor/coffin')
   }
 
+  const isLoggedIn = !authLoading && user !== null
+  const count = snapshots.length
+
   return (
     <main className="flex min-h-screen flex-col">
       <header className="flex items-center gap-3 border-b border-line px-4 py-4">
@@ -39,13 +44,18 @@ export function ArchiveView() {
           <ArrowLeft className="size-4 text-body" />
         </button>
         <h1 className="text-base font-medium text-primary">나의 보관함</h1>
-        {snapshots.length > 0 && (
-          <span className="ml-auto text-xs text-caption">{snapshots.length} / 5</span>
+        {!loading && count > 0 && (
+          <span className="ml-auto text-xs text-caption">
+            {isLoggedIn ? `${count}개` : `${count} / 5`}
+          </span>
         )}
       </header>
 
-      {snapshots.length === 0 ? (
-        <EmptyState />
+      {loading || authLoading ? (
+        // 로딩 중: 조용히 빈 화면 (짧은 네트워크 요청이므로 스피너 없음)
+        <div className="flex-1" />
+      ) : count === 0 ? (
+        <EmptyState isLoggedIn={isLoggedIn} />
       ) : (
         <section className="grid grid-cols-2 gap-3 p-4">
           {snapshots.map((snapshot) => (
@@ -57,7 +67,9 @@ export function ArchiveView() {
               <SnapshotThumbnail snapshot={snapshot} />
               <div className="w-full px-3 pb-2 pt-2.5">
                 {snapshot.message ? (
-                  <p className="line-clamp-2 text-sm leading-snug text-primary">{snapshot.message}</p>
+                  <p className="line-clamp-2 text-sm leading-snug text-primary">
+                    {snapshot.message}
+                  </p>
                 ) : (
                   <p className="text-sm text-caption/50">문구 없음</p>
                 )}
@@ -80,14 +92,26 @@ export function ArchiveView() {
   )
 }
 
-function EmptyState() {
+function EmptyState({ isLoggedIn }: { isLoggedIn: boolean }) {
   const router = useRouter()
+
   return (
     <div className="flex flex-1 flex-col items-center justify-center gap-4 px-8 py-24 text-center">
       <Archive className="size-9 text-caption/30" />
       <div className="flex flex-col gap-1">
-        <p className="text-sm font-medium text-primary">아직 저장된 관이 없어요</p>
-        <p className="text-xs text-caption">관을 꾸미고 완성하면 여기에 보관돼요</p>
+        {isLoggedIn ? (
+          <>
+            <p className="text-sm font-medium text-primary">아직 등록된 관이 없어요</p>
+            <p className="text-xs text-caption">
+              관을 꾸미고 공개하면 내 계정에 보관돼요
+            </p>
+          </>
+        ) : (
+          <>
+            <p className="text-sm font-medium text-primary">아직 저장된 관이 없어요</p>
+            <p className="text-xs text-caption">관을 꾸미고 완성하면 여기에 보관돼요</p>
+          </>
+        )}
       </div>
       <button
         onClick={() => router.push('/')}
