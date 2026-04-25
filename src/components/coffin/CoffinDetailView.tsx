@@ -3,9 +3,13 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { ArrowLeft } from 'lucide-react'
+import Image from 'next/image'
 import { CoffinFacePreview } from './CoffinFacePreview'
 import { ENABLED_FACES, FACE_CONFIGS } from '@/constants/editor-faces'
 import { COFFIN_SHAPES } from '@/constants/coffin-shapes'
+import { GUARDIAN_TYPE_MAP } from '@/constants/guardian-types'
+import { useEditorStore } from '@/store/useEditorStore'
+import { saveSnapshot } from '@/lib/snapshot'
 import { cn } from '@/lib/utils'
 import type { CoffinSnapshot } from '@/types/snapshot'
 import type { FaceKey, GridState } from '@/types/editor'
@@ -16,14 +20,31 @@ function hasContent(grid: GridState): boolean {
 
 type Props = {
   snapshot: CoffinSnapshot
+  isOwn: boolean
 }
 
-export function CoffinDetailView({ snapshot }: Props) {
+export function CoffinDetailView({ snapshot, isOwn }: Props) {
   const router = useRouter()
   const [activeFace, setActiveFace] = useState<FaceKey>('front')
+  const [saved, setSaved] = useState(false)
+  const loadFromSnapshot = useEditorStore((s) => s.loadFromSnapshot)
 
   const activeShape = FACE_CONFIGS[activeFace].shape
   const isHorizontal = COFFIN_SHAPES[activeShape].viewBox.startsWith('0 0 300')
+
+  const guardianInfo = snapshot.guardianKey
+    ? (GUARDIAN_TYPE_MAP[snapshot.guardianKey] ?? null)
+    : null
+
+  function handleReEdit() {
+    loadFromSnapshot(snapshot)
+    router.push('/editor/coffin')
+  }
+
+  function handleSaveToArchive() {
+    saveSnapshot({ ...snapshot, id: Date.now().toString(36) })
+    setSaved(true)
+  }
 
   return (
     <main className="flex min-h-screen flex-col">
@@ -63,20 +84,60 @@ export function CoffinDetailView({ snapshot }: Props) {
         })}
       </div>
 
-      {/* 면 미리보기 */}
+      {/* 본문 */}
       <section className="flex flex-1 flex-col items-center px-6 py-10 gap-8">
+        {/* 면 미리보기 */}
         <div
-          className={cn('w-full', isHorizontal ? '' : 'max-w-[220px]')}
+          className={cn('w-full', isHorizontal ? '' : 'max-w-55')}
           style={{ filter: 'drop-shadow(0 8px 24px rgba(0,0,0,0.13))' }}
         >
           <CoffinFacePreview snapshot={snapshot} face={activeFace} />
         </div>
 
+        {/* 문구 */}
         {snapshot.message && (
           <p className="max-w-xs break-keep text-center text-sm leading-relaxed text-body">
             {snapshot.message}
           </p>
         )}
+
+        {/* 수호캐릭터 서명 */}
+        {guardianInfo && (
+          <div className="mx-auto flex w-full max-w-xs items-center gap-3 rounded-2xl bg-surface px-4 py-3">
+            <div className="relative size-9 shrink-0">
+              <Image
+                src={guardianInfo.imagePath}
+                alt={guardianInfo.name}
+                fill
+                className="object-contain"
+              />
+            </div>
+            <div className="flex min-w-0 flex-col gap-0.5">
+              <span className="text-xs font-medium text-primary">{guardianInfo.name}</span>
+              <span className="line-clamp-1 text-xs text-caption">{guardianInfo.description}</span>
+            </div>
+          </div>
+        )}
+
+        {/* CTA */}
+        <div className="w-full max-w-xs">
+          {isOwn ? (
+            <button
+              onClick={handleReEdit}
+              className="w-full rounded-2xl bg-accent py-3.5 text-sm font-medium text-accent-fg transition-opacity active:opacity-80"
+            >
+              다시 꾸미기
+            </button>
+          ) : (
+            <button
+              onClick={handleSaveToArchive}
+              disabled={saved}
+              className="w-full rounded-2xl border border-line py-3.5 text-sm text-primary transition-opacity active:opacity-80 disabled:border-transparent disabled:text-caption/50"
+            >
+              {saved ? '내 보관함에 저장됐어요' : '내 디자인으로 저장'}
+            </button>
+          )}
+        </div>
       </section>
     </main>
   )

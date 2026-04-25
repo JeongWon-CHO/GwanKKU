@@ -1,5 +1,6 @@
 import type { EditorTarget, FaceKey, GridState, MessageStyle, UploadedImage } from '@/types/editor'
 import type { PatternId } from '@/constants/editor-patterns'
+import type { GuardianTypeKey } from '@/types/guardian'
 
 export type CoffinSnapshot = {
   version: 1
@@ -12,4 +13,5 @@ export type CoffinSnapshot = {
   message: string
   messageStyle: MessageStyle
   uploadedImages: UploadedImage[]
+  guardianKey?: GuardianTypeKey
 }

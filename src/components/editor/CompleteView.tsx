@@ -4,8 +4,10 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Share2, ImageDown, RotateCcw, ArrowLeft } from "lucide-react";
 import { useEditorStore } from "@/store/useEditorStore";
+import { useTestStore } from "@/store/useTestStore";
 import { useAuth } from "@/hooks/useAuth";
 import { EDITOR_PRESETS } from "@/constants/editor-presets";
+import { calcGuardianType } from "@/lib/calcGuardianType";
 import { saveSnapshot, loadSnapshots } from "@/lib/snapshot";
 import { saveSnapshotToServer } from "@/lib/snapshot-server";
 import { signInWithGoogle } from "@/lib/auth";
@@ -59,10 +61,15 @@ export function CompleteView() {
   const hasResumedRef = useRef(false);
 
   const [snapshotId] = useState(() => {
-    const params = new URLSearchParams(window.location.search)
-    return params.get('sid') || Date.now().toString(36)
-  })
-  const fromArchive = new URLSearchParams(window.location.search).get('from') === 'archive';
+    const params = new URLSearchParams(window.location.search);
+    return params.get("sid") || Date.now().toString(36);
+  });
+  const fromArchive =
+    new URLSearchParams(window.location.search).get("from") === "archive";
+
+  const answers = useTestStore((s) => s.answers);
+  const guardianKey =
+    Object.keys(answers).length > 0 ? calcGuardianType(answers) : undefined;
   const [isSheetOpen, setIsSheetOpen] = useState(false);
 
   const [serverSaveStatus, setServerSaveStatus] = useState<
@@ -87,6 +94,7 @@ export function CompleteView() {
       message,
       messageStyle,
       uploadedImages,
+      guardianKey,
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -95,7 +103,8 @@ export function CompleteView() {
   useEffect(() => {
     if (authLoading) return;
     if (hasResumedRef.current) return;
-    if (new URLSearchParams(window.location.search).get("resume") !== "1") return;
+    if (new URLSearchParams(window.location.search).get("resume") !== "1")
+      return;
 
     hasResumedRef.current = true;
 
@@ -162,6 +171,7 @@ export function CompleteView() {
       message,
       messageStyle,
       uploadedImages,
+      guardianKey,
     };
 
     // ?from=archive 경로는 스냅샷이 이미 localStorage에 있으므로 재저장하지 않음
@@ -298,7 +308,7 @@ export function CompleteView() {
             return (
               <div className="flex flex-col items-center gap-2 rounded-2xl bg-surface py-4">
                 <p className="text-sm font-medium text-primary">
-                  이미 명예의 전당에 올라갔어요
+                  명예의 전당에 올라갔어요
                 </p>
                 <button
                   onClick={() => router.push("/gallery")}

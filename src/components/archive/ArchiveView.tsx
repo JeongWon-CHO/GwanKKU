@@ -22,7 +22,7 @@ export function ArchiveView() {
   const loadFromSnapshot = useEditorStore((s) => s.loadFromSnapshot)
 
   function handleView(snapshot: CoffinSnapshot) {
-    saveCoffinView(snapshot)
+    saveCoffinView(snapshot, true)
     router.push(`/coffin/${snapshot.id}`)
   }
 

@@ -89,7 +89,8 @@ export function GalleryView() {
   }
 
   function handleView(snapshot: GallerySnapshot) {
-    saveCoffinView(toThumbnailSnapshot(snapshot))
+    const isOwn = !!user && snapshot.user_id === user.id
+    saveCoffinView(toThumbnailSnapshot(snapshot), isOwn)
     router.push(`/coffin/${snapshot.client_id}`)
   }
 

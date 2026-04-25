@@ -9,16 +9,18 @@ import type { CoffinSnapshot } from '@/types/snapshot'
 export default function CoffinDetailPage() {
   const router = useRouter()
   const [snapshot, setSnapshot] = useState<CoffinSnapshot | null>(null)
+  const [isOwn, setIsOwn] = useState(false)
 
   useEffect(() => {
-    const data = loadCoffinView()
-    if (!data) {
+    const context = loadCoffinView()
+    if (!context) {
       router.replace('/gallery')
       return
     }
-    setSnapshot(data)
+    setSnapshot(context.snapshot)
+    setIsOwn(context.isOwn)
   }, [router])
 
   if (!snapshot) return null
-  return <CoffinDetailView snapshot={snapshot} />
+  return <CoffinDetailView snapshot={snapshot} isOwn={isOwn} />
 }
