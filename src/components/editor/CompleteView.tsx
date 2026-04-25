@@ -4,12 +4,21 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Share2, ImageDown, RotateCcw, ArrowLeft } from "lucide-react";
 import { useEditorStore } from "@/store/useEditorStore";
+import { useAuth } from "@/hooks/useAuth";
 import { EDITOR_PRESETS } from "@/constants/editor-presets";
-import { saveSnapshot } from "@/lib/snapshot";
+import { saveSnapshot, loadSnapshots } from "@/lib/snapshot";
 import { saveSnapshotToServer } from "@/lib/snapshot-server";
+import { signInWithGoogle } from "@/lib/auth";
+import {
+  savePendingAction,
+  getPendingAction,
+  clearPendingAction,
+} from "@/lib/pending-action";
 import { CoffinPreviewSmall } from "./CoffinBoard";
 import { SaveCard } from "./SaveCard";
+import { AuthPromptSheet } from "@/components/auth/AuthPromptSheet";
 import { cn, isLight } from "@/lib/utils";
+import type { CoffinSnapshot } from "@/types/snapshot";
 
 async function cardToBlob(el: HTMLDivElement): Promise<Blob> {
   const { toBlob } = await import("html-to-image");
@@ -31,6 +40,7 @@ function triggerDownload(blob: Blob, filename: string) {
 
 export function CompleteView() {
   const router = useRouter();
+  const { user, loading: authLoading } = useAuth();
   const {
     target,
     backgroundColor,
@@ -39,18 +49,24 @@ export function CompleteView() {
     message,
     messageStyle,
     uploadedImages,
+    hasPublished,
+    loadFromSnapshot,
+    setHasPublished,
     reset,
   } = useEditorStore();
   const cardRef = useRef<HTMLDivElement>(null);
   const hasSavedRef = useRef(false);
+  const hasResumedRef = useRef(false);
 
   const [snapshotId] = useState(() => Date.now().toString(36));
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
 
   const [serverSaveStatus, setServerSaveStatus] = useState<
     "idle" | "saving" | "success" | "error"
   >("idle");
   const [serverSaveError, setServerSaveError] = useState<string | null>(null);
 
+  // 자동 localStorage 저장
   useEffect(() => {
     if (hasSavedRef.current || !target) return;
     if (new URLSearchParams(window.location.search).get("from") === "archive")
@@ -71,6 +87,52 @@ export function CompleteView() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // OAuth 복귀 후 pending action 자동 실행
+  useEffect(() => {
+    if (authLoading) return;
+    if (hasResumedRef.current) return;
+    if (new URLSearchParams(window.location.search).get("resume") !== "1") return;
+
+    hasResumedRef.current = true;
+
+    if (!user) {
+      clearPendingAction();
+      router.replace("/complete");
+      return;
+    }
+
+    const pending = getPendingAction();
+    if (!pending) {
+      router.replace("/complete");
+      return;
+    }
+
+    const snapshot = loadSnapshots().find((s) => s.id === pending.snapshotId);
+    if (!snapshot) {
+      clearPendingAction();
+      router.replace("/complete");
+      return;
+    }
+
+    loadFromSnapshot(snapshot);
+    setServerSaveStatus("saving");
+
+    saveSnapshotToServer(snapshot, true, undefined, user.id)
+      .then(() => {
+        setServerSaveStatus("success");
+        setHasPublished();
+        clearPendingAction();
+        router.replace("/complete");
+      })
+      .catch(() => {
+        setServerSaveStatus("error");
+        setServerSaveError("저장에 실패했어요. 다시 시도해 주세요.");
+        clearPendingAction();
+        router.replace("/complete");
+      });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authLoading, user]);
+
   const [isSaving, setIsSaving] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
@@ -83,35 +145,51 @@ export function CompleteView() {
   const isExporting = isSaving || isSharing;
 
   async function handlePublish() {
-    if (serverSaveStatus === "saving" || !target) return;
-    const currentTarget = target;
+    if (serverSaveStatus === "saving" || authLoading || !target) return;
+
+    const currentSnapshot: CoffinSnapshot = {
+      version: 1,
+      id: snapshotId,
+      createdAt: new Date().toISOString(),
+      target,
+      backgroundColor,
+      backgroundPatternId,
+      faceGrids,
+      message,
+      messageStyle,
+      uploadedImages,
+    };
+
+    // ?from=archive 경로는 자동 저장이 안 됐으므로 여기서 보장
+    if (!hasSavedRef.current) {
+      saveSnapshot(currentSnapshot);
+      hasSavedRef.current = true;
+    }
+
+    if (!user) {
+      savePendingAction(snapshotId);
+      setIsSheetOpen(true);
+      return;
+    }
+
     setServerSaveStatus("saving");
     setServerSaveError(null);
     try {
       const previewBlob = cardRef.current
         ? await cardToBlob(cardRef.current).catch(() => undefined)
         : undefined;
-      await saveSnapshotToServer(
-        {
-          version: 1,
-          id: snapshotId,
-          createdAt: new Date().toISOString(),
-          target: currentTarget,
-          backgroundColor,
-          backgroundPatternId,
-          faceGrids,
-          message,
-          messageStyle,
-          uploadedImages,
-        },
-        true,
-        previewBlob,
-      );
+      await saveSnapshotToServer(currentSnapshot, true, previewBlob, user.id);
       setServerSaveStatus("success");
+      setHasPublished();
     } catch {
       setServerSaveStatus("error");
       setServerSaveError("저장에 실패했어요. 다시 시도해 주세요.");
     }
+  }
+
+  function handleConfirmLogin() {
+    setIsSheetOpen(false);
+    signInWithGoogle("/complete?resume=1");
   }
 
   async function handleSave() {
@@ -210,34 +288,42 @@ export function CompleteView() {
       {/* 액션 영역 */}
       <section className="flex flex-col gap-3 px-4 py-6">
         {/* 온라인 관짝함 등재 */}
-        {serverSaveStatus === "success" ? (
-          <div className="flex flex-col items-center gap-2 rounded-2xl bg-surface py-4">
-            <p className="text-sm font-medium text-primary">등재됐어요</p>
-            <button
-              onClick={() => router.push("/gallery")}
-              className="text-sm text-caption underline-offset-2 hover:underline"
-            >
-              온라인 관짝함에서 보기
-            </button>
-          </div>
-        ) : (
-          <>
-            <button
-              onClick={handlePublish}
-              disabled={serverSaveStatus === "saving"}
-              className="flex w-full items-center justify-center rounded-2xl bg-accent py-4 text-base font-medium text-accent-fg transition-opacity active:opacity-80 disabled:opacity-50"
-            >
-              {serverSaveStatus === "saving"
-                ? "올리는 중..."
-                : "명예의 전당에 공개하기"}
-            </button>
-            {serverSaveError && (
-              <p className="text-center text-xs text-caption">
-                {serverSaveError}
-              </p>
-            )}
-          </>
-        )}
+        {(() => {
+          const isPublished = hasPublished || serverSaveStatus === "success";
+          if (isPublished) {
+            return (
+              <div className="flex flex-col items-center gap-2 rounded-2xl bg-surface py-4">
+                <p className="text-sm font-medium text-primary">
+                  이미 명예의 전당에 올라갔어요
+                </p>
+                <button
+                  onClick={() => router.push("/gallery")}
+                  className="text-sm text-caption underline-offset-2 hover:underline"
+                >
+                  온라인 관짝함에서 보기
+                </button>
+              </div>
+            );
+          }
+          return (
+            <>
+              <button
+                onClick={handlePublish}
+                disabled={serverSaveStatus === "saving" || authLoading}
+                className="flex w-full items-center justify-center rounded-2xl bg-accent py-4 text-base font-medium text-accent-fg transition-opacity active:opacity-80 disabled:opacity-50"
+              >
+                {serverSaveStatus === "saving"
+                  ? "등재 중..."
+                  : "명예의 전당에 공개하기"}
+              </button>
+              {serverSaveError && (
+                <p className="text-center text-xs text-caption">
+                  {serverSaveError}
+                </p>
+              )}
+            </>
+          );
+        })()}
 
         {/* 구분 */}
         <div className="my-1 h-px bg-line" />
@@ -306,6 +392,12 @@ export function CompleteView() {
       >
         <SaveCard ref={cardRef} />
       </div>
+
+      <AuthPromptSheet
+        isOpen={isSheetOpen}
+        onClose={() => setIsSheetOpen(false)}
+        onConfirm={handleConfirmLogin}
+      />
     </main>
   );
 }
