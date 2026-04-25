@@ -9,7 +9,6 @@ import { ENABLED_FACES, FACE_CONFIGS } from '@/constants/editor-faces'
 import { COFFIN_SHAPES } from '@/constants/coffin-shapes'
 import { GUARDIAN_TYPE_MAP } from '@/constants/guardian-types'
 import { useEditorStore } from '@/store/useEditorStore'
-import { saveSnapshot } from '@/lib/snapshot'
 import { cn } from '@/lib/utils'
 import type { CoffinSnapshot } from '@/types/snapshot'
 import type { FaceKey, GridState } from '@/types/editor'
@@ -26,8 +25,8 @@ type Props = {
 export function CoffinDetailView({ snapshot, isOwn }: Props) {
   const router = useRouter()
   const [activeFace, setActiveFace] = useState<FaceKey>('front')
-  const [saved, setSaved] = useState(false)
   const loadFromSnapshot = useEditorStore((s) => s.loadFromSnapshot)
+  const clearActiveSnapshotId = useEditorStore((s) => s.clearActiveSnapshotId)
 
   const activeShape = FACE_CONFIGS[activeFace].shape
   const isHorizontal = COFFIN_SHAPES[activeShape].viewBox.startsWith('0 0 300')
@@ -36,14 +35,15 @@ export function CoffinDetailView({ snapshot, isOwn }: Props) {
     ? (GUARDIAN_TYPE_MAP[snapshot.guardianKey] ?? null)
     : null
 
-  function handleReEdit() {
-    loadFromSnapshot(snapshot)
+  function handleEdit() {
+    loadFromSnapshot(snapshot)   // activeSnapshotId = snapshot.id 자동 설정
     router.push('/editor/coffin')
   }
 
-  function handleSaveToArchive() {
-    saveSnapshot({ ...snapshot, id: Date.now().toString(36) })
-    setSaved(true)
+  function handleFork() {
+    loadFromSnapshot(snapshot)   // 내용 로드
+    clearActiveSnapshotId()      // activeSnapshotId = null → 새 작품으로 처리
+    router.push('/editor/coffin')
   }
 
   return (
@@ -123,18 +123,17 @@ export function CoffinDetailView({ snapshot, isOwn }: Props) {
         <div className="w-full max-w-xs">
           {isOwn ? (
             <button
-              onClick={handleReEdit}
+              onClick={handleEdit}
               className="w-full rounded-2xl bg-accent py-3.5 text-sm font-medium text-accent-fg transition-opacity active:opacity-80"
             >
-              다시 꾸미기
+              이어서 꾸미기
             </button>
           ) : (
             <button
-              onClick={handleSaveToArchive}
-              disabled={saved}
-              className="w-full rounded-2xl border border-line py-3.5 text-sm text-primary transition-opacity active:opacity-80 disabled:border-transparent disabled:text-caption/50"
+              onClick={handleFork}
+              className="w-full rounded-2xl border border-line py-3.5 text-sm text-primary transition-opacity active:opacity-80"
             >
-              {saved ? '내 보관함에 저장됐어요' : '내 디자인으로 저장'}
+              이 디자인으로 시작하기
             </button>
           )}
         </div>

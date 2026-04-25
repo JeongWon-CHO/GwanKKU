@@ -66,6 +66,10 @@ export function CompleteView() {
   });
   const fromArchive =
     new URLSearchParams(window.location.search).get("from") === "archive";
+  const [isEditMode] = useState(() => {
+    const p = new URLSearchParams(window.location.search);
+    return p.get("sid") !== null && p.get("from") !== "archive";
+  });
 
   const answers = useTestStore((s) => s.answers);
   const guardianKey =
@@ -80,8 +84,7 @@ export function CompleteView() {
   // 자동 localStorage 저장
   useEffect(() => {
     if (hasSavedRef.current || !target) return;
-    if (new URLSearchParams(window.location.search).get("from") === "archive")
-      return;
+    if (fromArchive || isEditMode) return;
     hasSavedRef.current = true;
     saveSnapshot({
       version: 1,
@@ -174,8 +177,8 @@ export function CompleteView() {
       guardianKey,
     };
 
-    // ?from=archive 경로는 스냅샷이 이미 localStorage에 있으므로 재저장하지 않음
-    if (!hasSavedRef.current && !fromArchive) {
+    // archive 진입 또는 edit mode: 스냅샷이 이미 localStorage에 있으므로 재저장하지 않음
+    if (!hasSavedRef.current && !fromArchive && !isEditMode) {
       saveSnapshot(currentSnapshot);
       hasSavedRef.current = true;
     }
@@ -308,7 +311,7 @@ export function CompleteView() {
             return (
               <div className="flex flex-col items-center gap-2 rounded-2xl bg-surface py-4">
                 <p className="text-sm font-medium text-primary">
-                  명예의 전당에 올라갔어요
+                  {isEditMode ? "변경사항이 저장됐어요" : "명예의 전당에 올라갔어요"}
                 </p>
                 <button
                   onClick={() => router.push("/gallery")}
@@ -327,8 +330,8 @@ export function CompleteView() {
                 className="flex w-full items-center justify-center rounded-2xl bg-accent py-4 text-base font-medium text-accent-fg transition-opacity active:opacity-80 disabled:opacity-50"
               >
                 {serverSaveStatus === "saving"
-                  ? "등재 중..."
-                  : "명예의 전당에 공개하기"}
+                  ? (isEditMode ? "저장 중..." : "등재 중...")
+                  : (isEditMode ? "변경사항 저장하기" : "명예의 전당에 공개하기")}
               </button>
               {serverSaveError && (
                 <p className="text-center text-xs text-caption">
