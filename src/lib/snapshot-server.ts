@@ -1,6 +1,10 @@
 import { supabase } from './supabase'
 import type { CoffinSnapshot } from '@/types/snapshot'
 
+function storagePrefix(userId: string | null | undefined, clientId: string): string {
+  return userId ? `users/${userId}/${clientId}` : `anon/${clientId}`
+}
+
 function dataUrlToBlob(dataUrl: string): Blob {
   const [header, base64] = dataUrl.split(',')
   const mime = header.match(/:(.*?);/)?.[1] ?? 'image/png'
@@ -11,7 +15,7 @@ function dataUrlToBlob(dataUrl: string): Blob {
 }
 
 async function uploadImages(
-  clientId: string,
+  prefix: string,
   images: CoffinSnapshot['uploadedImages'],
 ): Promise<string[]> {
   if (images.length === 0) return []
@@ -19,7 +23,7 @@ async function uploadImages(
   const keys: string[] = []
   for (const img of images) {
     const blob = dataUrlToBlob(img.dataUrl)
-    const key = `${clientId}/${img.id}`
+    const key = `${prefix}/${img.id}`
     const { error } = await supabase.storage
       .from('snapshot-images')
       .upload(key, blob, { upsert: true })
@@ -29,8 +33,8 @@ async function uploadImages(
   return keys
 }
 
-async function uploadPreview(clientId: string, blob: Blob): Promise<string> {
-  const key = `${clientId}/preview.png`
+async function uploadPreview(prefix: string, blob: Blob): Promise<string> {
+  const key = `${prefix}/preview.png`
   const { error } = await supabase.storage
     .from('snapshot-images')
     .upload(key, blob, { contentType: 'image/png', upsert: true })
@@ -42,6 +46,7 @@ export async function saveSnapshotToServer(
   snapshot: CoffinSnapshot,
   isPublic: boolean,
   previewBlob?: Blob,
+  userId?: string | null,
 ): Promise<void> {
   const {
     id: clientId,
@@ -53,16 +58,18 @@ export async function saveSnapshotToServer(
     ...editorFields
   } = snapshot
 
+  const prefix = storagePrefix(userId, clientId)
+
   const [imageKeys, previewKey] = await Promise.all([
-    uploadImages(clientId, uploadedImages),
+    uploadImages(prefix, uploadedImages),
     previewBlob
-      ? uploadPreview(clientId, previewBlob).catch(() => null)
+      ? uploadPreview(prefix, previewBlob).catch(() => null)
       : Promise.resolve(null),
   ])
 
   const { error } = await supabase.from('snapshots').insert({
     client_id: clientId,
-    user_id: null,
+    user_id: userId ?? null,
     is_public: isPublic,
     version,
     target,
