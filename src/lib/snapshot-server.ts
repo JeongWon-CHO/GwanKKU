@@ -55,6 +55,7 @@ export async function saveSnapshotToServer(
     target,
     message,
     version,
+    guardianKey,
     ...editorFields
   } = snapshot
 
@@ -67,17 +68,18 @@ export async function saveSnapshotToServer(
       : Promise.resolve(null),
   ])
 
-  const { error } = await supabase.from('snapshots').insert({
+  const { error } = await supabase.from('snapshots').upsert({
     client_id: clientId,
     user_id: userId ?? null,
     is_public: isPublic,
     version,
     target,
     message,
+    guardian_key: guardianKey ?? null,
     editor_data: editorFields,
     image_keys: imageKeys,
     preview_key: previewKey,
-  })
+  }, { onConflict: 'client_id' })
 
   if (error) throw error
 }

@@ -9,13 +9,17 @@ import {
   decrementLike,
   saveGallerySnapshotToArchive,
 } from '@/lib/gallery'
+import { useAuth } from '@/hooks/useAuth'
 import { useLikedSnapshots } from '@/hooks/useLikedSnapshots'
+import { saveCoffinView } from '@/lib/coffin-view'
 import { SnapshotThumbnail } from '@/components/archive/SnapshotThumbnail'
 import { cn } from '@/lib/utils'
 import type { GallerySnapshot, SortOrder } from '@/types/gallery'
 import type { CoffinSnapshot } from '@/types/snapshot'
+import type { GuardianTypeKey } from '@/types/guardian'
 
 function toThumbnailSnapshot(row: GallerySnapshot): CoffinSnapshot {
+  const rawKey = row.guardian_key ?? row.editor_data.guardianKey
   return {
     version: 1,
     id: row.client_id,
@@ -27,6 +31,7 @@ function toThumbnailSnapshot(row: GallerySnapshot): CoffinSnapshot {
     backgroundPatternId: row.editor_data.backgroundPatternId,
     faceGrids: row.editor_data.faceGrids,
     uploadedImages: [],
+    guardianKey: rawKey ? (rawKey as GuardianTypeKey) : undefined,
   }
 }
 
@@ -37,6 +42,7 @@ function formatDate(iso: string): string {
 
 export function GalleryView() {
   const router = useRouter()
+  const { user } = useAuth()
   const [sort, setSort] = useState<SortOrder>('latest')
   const [snapshots, setSnapshots] = useState<GallerySnapshot[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -83,6 +89,12 @@ export function GalleryView() {
       if (wasLiked) addLike(snapshot.id)
       else removeLike(snapshot.id)
     }
+  }
+
+  function handleView(snapshot: GallerySnapshot) {
+    const isOwn = !!user && snapshot.user_id === user.id
+    saveCoffinView(toThumbnailSnapshot(snapshot), isOwn)
+    router.push(`/coffin/${snapshot.client_id}`)
   }
 
   function handleSave(snapshot: GallerySnapshot) {
@@ -142,6 +154,8 @@ export function GalleryView() {
               snapshot={snapshot}
               liked={isLiked(snapshot.id)}
               saved={savedIds.has(snapshot.id)}
+              isOwn={!!user && snapshot.user_id === user.id}
+              onView={() => handleView(snapshot)}
               onLike={() => handleLike(snapshot)}
               onSave={() => handleSave(snapshot)}
             />
@@ -156,13 +170,21 @@ type CardProps = {
   snapshot: GallerySnapshot
   liked: boolean
   saved: boolean
+  isOwn: boolean
+  onView: () => void
   onLike: () => void
   onSave: () => void
 }
 
-function GalleryCard({ snapshot, liked, saved, onLike, onSave }: CardProps) {
+function GalleryCard({ snapshot, liked, saved, isOwn, onView, onLike, onSave }: CardProps) {
   return (
-    <div className="flex flex-col overflow-hidden rounded-2xl bg-surface">
+    <div
+      className="flex flex-col overflow-hidden rounded-2xl bg-surface transition-opacity active:opacity-70"
+      onClick={onView}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => e.key === 'Enter' && onView()}
+    >
       <SnapshotThumbnail snapshot={toThumbnailSnapshot(snapshot)} />
 
       <div className="flex flex-col gap-2 px-3 pb-3 pt-2.5">
@@ -175,7 +197,7 @@ function GalleryCard({ snapshot, liked, saved, onLike, onSave }: CardProps) {
         <div className="flex items-center justify-between">
           <span className="text-xs text-caption">{formatDate(snapshot.created_at)}</span>
           <button
-            onClick={onLike}
+            onClick={(e) => { e.stopPropagation(); onLike() }}
             className="flex items-center gap-1 text-xs text-caption transition-opacity active:opacity-60"
             aria-label={liked ? '추천 취소' : '추천하기'}
           >
@@ -188,7 +210,7 @@ function GalleryCard({ snapshot, liked, saved, onLike, onSave }: CardProps) {
 
         <div className="flex flex-col gap-1.5">
           <button
-            onClick={onLike}
+            onClick={(e) => { e.stopPropagation(); onLike() }}
             className={cn(
               'w-full rounded-xl py-1.5 text-xs font-medium transition-colors',
               liked
@@ -199,13 +221,15 @@ function GalleryCard({ snapshot, liked, saved, onLike, onSave }: CardProps) {
             {liked ? '♥ 추천했어요' : '♡ 추천하기'}
           </button>
 
-          <button
-            onClick={onSave}
-            disabled={saved}
-            className="w-full rounded-xl border border-line py-1.5 text-xs text-caption transition-colors hover:text-body disabled:border-transparent disabled:text-caption/50"
-          >
-            {saved ? '보관함에 저장됐어요' : '내 디자인으로 저장'}
-          </button>
+          {!isOwn && (
+            <button
+              onClick={(e) => { e.stopPropagation(); onSave() }}
+              disabled={saved}
+              className="w-full rounded-xl border border-line py-1.5 text-xs text-caption transition-colors hover:text-body disabled:border-transparent disabled:text-caption/50"
+            >
+              {saved ? '보관함에 저장됐어요' : '내 디자인으로 저장'}
+            </button>
+          )}
         </div>
       </div>
     </div>

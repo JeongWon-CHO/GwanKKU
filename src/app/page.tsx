@@ -1,8 +1,15 @@
 import Link from "next/link";
+import { AuthHeaderButton } from "@/components/auth/AuthHeaderButton";
 
 export default function LandingPage() {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between px-6 py-16">
+    <main className="relative flex min-h-screen flex-col items-center justify-between px-6 py-16">
+      <div className="absolute left-4 top-4">
+        <AuthHeaderButton slot="auth" />
+      </div>
+      <div className="absolute right-4 top-4">
+        <AuthHeaderButton slot="archive" />
+      </div>
       <div className="flex flex-1 flex-col items-center justify-center gap-10 text-center">
         <div className="flex flex-col gap-4">
           <h1 className="text-4xl font-semibold tracking-tight text-primary">

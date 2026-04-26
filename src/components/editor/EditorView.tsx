@@ -24,7 +24,7 @@ type Props = {
 export function EditorView({ target }: Props) {
   const router = useRouter();
   const [showMessageSheet, setShowMessageSheet] = useState(false);
-  const { backgroundColor, activeFace, setTarget, setActiveFace } = useEditorStore();
+  const { backgroundColor, activeFace, activeSnapshotId, setTarget, setActiveFace } = useEditorStore();
   const { answers } = useTestStore();
 
   const preset = EDITOR_PRESETS[target];
@@ -139,7 +139,9 @@ export function EditorView({ target }: Props) {
 
       {showMessageSheet && (
         <MessageSheet
-          onConfirm={() => router.push("/complete")}
+          onConfirm={() =>
+            router.push(activeSnapshotId ? `/complete?sid=${activeSnapshotId}` : '/complete')
+          }
           onClose={() => setShowMessageSheet(false)}
         />
       )}

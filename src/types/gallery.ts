@@ -4,6 +4,7 @@ import type { PatternId } from '@/constants/editor-patterns'
 export type GallerySnapshot = {
   id: string
   client_id: string
+  user_id: string
   target: EditorTarget
   message: string
   editor_data: {
@@ -11,7 +12,9 @@ export type GallerySnapshot = {
     backgroundPatternId: PatternId
     faceGrids: Record<FaceKey, GridState>
     messageStyle: MessageStyle
+    guardianKey?: string
   }
+  guardian_key?: string | null
   like_count: number
   created_at: string
 }

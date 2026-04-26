@@ -33,6 +33,9 @@ type EditorStore = {
   // 페이지 reload 시 초기화되나, reload 후엔 target=null로 /complete 접근 자체가 불가.
   // 추후 /complete 복원 구조가 생기면 localStorage나 서버 상태로 승격 필요.
   hasPublished: boolean
+  // 편집 중인 기존 스냅샷의 ID. null이면 새 작품(fork 포함).
+  // loadFromSnapshot 시 자동 설정, fork 흐름에서는 clearActiveSnapshotId로 즉시 해제.
+  activeSnapshotId: string | null
   setTarget: (target: EditorTarget) => void
   setBackgroundColor: (color: string) => void
   setBackgroundPatternId: (id: PatternId) => void
@@ -45,6 +48,7 @@ type EditorStore = {
   addUploadedImage: (img: UploadedImage) => void
   removeUploadedImage: (id: string) => void
   loadFromSnapshot: (snapshot: CoffinSnapshot) => void
+  clearActiveSnapshotId: () => void
   setHasPublished: () => void
   reset: () => void
 }
@@ -60,6 +64,7 @@ export const useEditorStore = create<EditorStore>((set) => ({
   messageStyle: DEFAULT_MESSAGE_STYLE,
   uploadedImages: [],
   hasPublished: false,
+  activeSnapshotId: null,
 
   setTarget: (target) => set({ target }),
 
@@ -119,7 +124,10 @@ export const useEditorStore = create<EditorStore>((set) => ({
       message: snapshot.message,
       messageStyle: snapshot.messageStyle,
       uploadedImages: snapshot.uploadedImages,
+      activeSnapshotId: snapshot.id,
     }),
+
+  clearActiveSnapshotId: () => set({ activeSnapshotId: null }),
 
   setHasPublished: () => set({ hasPublished: true }),
 
@@ -135,5 +143,6 @@ export const useEditorStore = create<EditorStore>((set) => ({
       messageStyle: DEFAULT_MESSAGE_STYLE,
       uploadedImages: [],
       hasPublished: false,
+      activeSnapshotId: null,
     }),
 }))

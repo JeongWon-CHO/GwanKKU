@@ -1,8 +1,9 @@
 import { supabase } from './supabase'
 import { saveSnapshot } from './snapshot'
 import type { GallerySnapshot, SortOrder } from '@/types/gallery'
+import type { GuardianTypeKey } from '@/types/guardian'
 
-const SELECT_FIELDS = 'id, client_id, target, message, editor_data, like_count, created_at'
+const SELECT_FIELDS = 'id, client_id, user_id, target, message, editor_data, guardian_key, like_count, created_at'
 
 export async function fetchGallerySnapshots(sort: SortOrder): Promise<GallerySnapshot[]> {
   const base = supabase
@@ -31,6 +32,8 @@ export async function decrementLike(snapshotId: string): Promise<number> {
 }
 
 export function saveGallerySnapshotToArchive(row: GallerySnapshot): void {
+  const rawKey = row.guardian_key ?? row.editor_data.guardianKey
+  const guardianKey = rawKey ? (rawKey as GuardianTypeKey) : undefined
   saveSnapshot({
     version: 1,
     id: Date.now().toString(36),
@@ -42,5 +45,6 @@ export function saveGallerySnapshotToArchive(row: GallerySnapshot): void {
     backgroundPatternId: row.editor_data.backgroundPatternId,
     faceGrids: row.editor_data.faceGrids,
     uploadedImages: [],
+    guardianKey,
   })
 }

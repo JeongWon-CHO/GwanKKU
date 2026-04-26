@@ -4,8 +4,10 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Share2, ImageDown, RotateCcw, ArrowLeft } from "lucide-react";
 import { useEditorStore } from "@/store/useEditorStore";
+import { useTestStore } from "@/store/useTestStore";
 import { useAuth } from "@/hooks/useAuth";
 import { EDITOR_PRESETS } from "@/constants/editor-presets";
+import { calcGuardianType } from "@/lib/calcGuardianType";
 import { saveSnapshot, loadSnapshots } from "@/lib/snapshot";
 import { saveSnapshotToServer } from "@/lib/snapshot-server";
 import { signInWithGoogle } from "@/lib/auth";
@@ -58,7 +60,20 @@ export function CompleteView() {
   const hasSavedRef = useRef(false);
   const hasResumedRef = useRef(false);
 
-  const [snapshotId] = useState(() => Date.now().toString(36));
+  const [snapshotId] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get("sid") || Date.now().toString(36);
+  });
+  const fromArchive =
+    new URLSearchParams(window.location.search).get("from") === "archive";
+  const [isEditMode] = useState(() => {
+    const p = new URLSearchParams(window.location.search);
+    return p.get("sid") !== null && p.get("from") !== "archive";
+  });
+
+  const answers = useTestStore((s) => s.answers);
+  const guardianKey =
+    Object.keys(answers).length > 0 ? calcGuardianType(answers) : undefined;
   const [isSheetOpen, setIsSheetOpen] = useState(false);
 
   const [serverSaveStatus, setServerSaveStatus] = useState<
@@ -69,8 +84,7 @@ export function CompleteView() {
   // 자동 localStorage 저장
   useEffect(() => {
     if (hasSavedRef.current || !target) return;
-    if (new URLSearchParams(window.location.search).get("from") === "archive")
-      return;
+    if (fromArchive || isEditMode) return;
     hasSavedRef.current = true;
     saveSnapshot({
       version: 1,
@@ -83,6 +97,7 @@ export function CompleteView() {
       message,
       messageStyle,
       uploadedImages,
+      guardianKey,
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -91,7 +106,8 @@ export function CompleteView() {
   useEffect(() => {
     if (authLoading) return;
     if (hasResumedRef.current) return;
-    if (new URLSearchParams(window.location.search).get("resume") !== "1") return;
+    if (new URLSearchParams(window.location.search).get("resume") !== "1")
+      return;
 
     hasResumedRef.current = true;
 
@@ -158,10 +174,11 @@ export function CompleteView() {
       message,
       messageStyle,
       uploadedImages,
+      guardianKey,
     };
 
-    // ?from=archive 경로는 자동 저장이 안 됐으므로 여기서 보장
-    if (!hasSavedRef.current) {
+    // archive 진입 또는 edit mode: 스냅샷이 이미 localStorage에 있으므로 재저장하지 않음
+    if (!hasSavedRef.current && !fromArchive && !isEditMode) {
       saveSnapshot(currentSnapshot);
       hasSavedRef.current = true;
     }
@@ -294,7 +311,7 @@ export function CompleteView() {
             return (
               <div className="flex flex-col items-center gap-2 rounded-2xl bg-surface py-4">
                 <p className="text-sm font-medium text-primary">
-                  이미 명예의 전당에 올라갔어요
+                  {isEditMode ? "변경사항이 저장됐어요" : "명예의 전당에 올라갔어요"}
                 </p>
                 <button
                   onClick={() => router.push("/gallery")}
@@ -313,8 +330,8 @@ export function CompleteView() {
                 className="flex w-full items-center justify-center rounded-2xl bg-accent py-4 text-base font-medium text-accent-fg transition-opacity active:opacity-80 disabled:opacity-50"
               >
                 {serverSaveStatus === "saving"
-                  ? "등재 중..."
-                  : "명예의 전당에 공개하기"}
+                  ? (isEditMode ? "저장 중..." : "등재 중...")
+                  : (isEditMode ? "변경사항 저장하기" : "명예의 전당에 공개하기")}
               </button>
               {serverSaveError && (
                 <p className="text-center text-xs text-caption">
