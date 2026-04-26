@@ -16,8 +16,10 @@ import { SnapshotThumbnail } from '@/components/archive/SnapshotThumbnail'
 import { cn } from '@/lib/utils'
 import type { GallerySnapshot, SortOrder } from '@/types/gallery'
 import type { CoffinSnapshot } from '@/types/snapshot'
+import type { GuardianTypeKey } from '@/types/guardian'
 
 function toThumbnailSnapshot(row: GallerySnapshot): CoffinSnapshot {
+  const rawKey = row.guardian_key ?? row.editor_data.guardianKey
   return {
     version: 1,
     id: row.client_id,
@@ -29,6 +31,7 @@ function toThumbnailSnapshot(row: GallerySnapshot): CoffinSnapshot {
     backgroundPatternId: row.editor_data.backgroundPatternId,
     faceGrids: row.editor_data.faceGrids,
     uploadedImages: [],
+    guardianKey: rawKey ? (rawKey as GuardianTypeKey) : undefined,
   }
 }
 

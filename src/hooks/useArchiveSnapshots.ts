@@ -7,6 +7,7 @@ import { loadSnapshots } from '@/lib/snapshot'
 import type { CoffinSnapshot } from '@/types/snapshot'
 import type { EditorTarget, FaceKey, GridState, MessageStyle } from '@/types/editor'
 import type { PatternId } from '@/constants/editor-patterns'
+import type { GuardianTypeKey } from '@/types/guardian'
 
 type ArchiveServerRow = {
   client_id: string
@@ -17,11 +18,14 @@ type ArchiveServerRow = {
     backgroundPatternId: PatternId
     faceGrids: Record<FaceKey, GridState>
     messageStyle: MessageStyle
+    guardianKey?: string
   }
+  guardian_key?: string | null
   created_at: string
 }
 
 function serverRowToSnapshot(row: ArchiveServerRow): CoffinSnapshot {
+  const rawKey = row.guardian_key ?? row.editor_data.guardianKey
   return {
     version: 1,
     id: row.client_id,
@@ -33,10 +37,11 @@ function serverRowToSnapshot(row: ArchiveServerRow): CoffinSnapshot {
     faceGrids: row.editor_data.faceGrids,
     messageStyle: row.editor_data.messageStyle,
     uploadedImages: [],
+    guardianKey: rawKey ? (rawKey as GuardianTypeKey) : undefined,
   }
 }
 
-const SELECT_FIELDS = 'client_id, target, message, editor_data, created_at'
+const SELECT_FIELDS = 'client_id, target, message, editor_data, guardian_key, created_at'
 
 type Result = {
   snapshots: CoffinSnapshot[]

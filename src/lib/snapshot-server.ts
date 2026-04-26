@@ -55,6 +55,7 @@ export async function saveSnapshotToServer(
     target,
     message,
     version,
+    guardianKey,
     ...editorFields
   } = snapshot
 
@@ -74,6 +75,7 @@ export async function saveSnapshotToServer(
     version,
     target,
     message,
+    guardian_key: guardianKey ?? null,
     editor_data: editorFields,
     image_keys: imageKeys,
     preview_key: previewKey,

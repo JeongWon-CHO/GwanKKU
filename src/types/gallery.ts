@@ -12,7 +12,9 @@ export type GallerySnapshot = {
     backgroundPatternId: PatternId
     faceGrids: Record<FaceKey, GridState>
     messageStyle: MessageStyle
+    guardianKey?: string
   }
+  guardian_key?: string | null
   like_count: number
   created_at: string
 }
