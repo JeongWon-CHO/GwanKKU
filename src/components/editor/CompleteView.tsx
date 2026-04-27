@@ -314,7 +314,9 @@ export function CompleteView() {
             return (
               <div className="flex flex-col items-center gap-2 rounded-2xl bg-surface py-4">
                 <p className="text-sm font-medium text-primary">
-                  {isEditMode ? "변경사항이 저장됐어요" : "명예의 전당에 올라갔어요"}
+                  {isEditMode
+                    ? "변경사항이 저장됐어요"
+                    : "명예의 전당에 올라갔어요"}
                 </p>
                 <button
                   onClick={() => router.push("/gallery")}
@@ -333,8 +335,12 @@ export function CompleteView() {
                 className="flex w-full items-center justify-center rounded-2xl bg-accent py-4 text-base font-medium text-accent-fg transition-opacity active:opacity-80 disabled:opacity-50"
               >
                 {serverSaveStatus === "saving"
-                  ? (isEditMode ? "저장 중..." : "등재 중...")
-                  : (isEditMode ? "변경사항 저장하기" : "명예의 전당에 공개하기")}
+                  ? isEditMode
+                    ? "저장 중..."
+                    : "등재 중..."
+                  : isEditMode
+                    ? "변경사항 저장하기"
+                    : "명예의 전당에 공개하기"}
               </button>
               {serverSaveError && (
                 <p className="text-center text-xs text-caption">
@@ -381,7 +387,7 @@ export function CompleteView() {
 
       {/* 하단 보조 액션 */}
       <div className="flex flex-col items-center gap-10 pb-10">
-        <button
+        {/* <button
           onClick={() => {
             setActiveSnapshotId(snapshotId);
             router.push("/editor/coffin");
@@ -389,7 +395,7 @@ export function CompleteView() {
           className="text-sm text-caption underline-offset-2 hover:underline"
         >
           다시 꾸미기
-        </button>
+        </button> */}
         <button
           onClick={() => {
             reset();
