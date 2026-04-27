@@ -53,6 +53,7 @@ export function CompleteView() {
     uploadedImages,
     hasPublished,
     loadFromSnapshot,
+    setActiveSnapshotId,
     setHasPublished,
     reset,
   } = useEditorStore();
@@ -306,7 +307,9 @@ export function CompleteView() {
       <section className="flex flex-col gap-3 px-4 py-6">
         {/* 온라인 관짝함 등재 */}
         {(() => {
-          const isPublished = hasPublished || serverSaveStatus === "success";
+          const isPublished = isEditMode
+            ? serverSaveStatus === "success"
+            : hasPublished || serverSaveStatus === "success";
           if (isPublished) {
             return (
               <div className="flex flex-col items-center gap-2 rounded-2xl bg-surface py-4">
@@ -379,7 +382,10 @@ export function CompleteView() {
       {/* 하단 보조 액션 */}
       <div className="flex flex-col items-center gap-10 pb-10">
         <button
-          onClick={() => router.push("/editor/coffin")}
+          onClick={() => {
+            setActiveSnapshotId(snapshotId);
+            router.push("/editor/coffin");
+          }}
           className="text-sm text-caption underline-offset-2 hover:underline"
         >
           다시 꾸미기

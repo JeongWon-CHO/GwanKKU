@@ -10,6 +10,7 @@ function CompletePageInner() {
   const searchParams = useSearchParams()
   const target = useEditorStore((s) => s.target)
   const isResume = searchParams.get('resume') === '1'
+  const sid = searchParams.get('sid')
 
   useEffect(() => {
     if (!target && !isResume) {
@@ -21,7 +22,8 @@ function CompletePageInner() {
   // CompleteView 내부의 resume effect가 실행되어 loadFromSnapshot을 호출할 수 있다
   if (!target && !isResume) return null
 
-  return <CompleteView />
+  // sid가 바뀌면 CompleteView를 리마운트해서 useState lazy init(isEditMode 등)을 재실행
+  return <CompleteView key={sid ?? 'new'} />
 }
 
 export default function CompletePage() {

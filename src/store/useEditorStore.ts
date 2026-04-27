@@ -48,6 +48,7 @@ type EditorStore = {
   addUploadedImage: (img: UploadedImage) => void
   removeUploadedImage: (id: string) => void
   loadFromSnapshot: (snapshot: CoffinSnapshot) => void
+  setActiveSnapshotId: (id: string | null) => void
   clearActiveSnapshotId: () => void
   setHasPublished: () => void
   reset: () => void
@@ -126,6 +127,8 @@ export const useEditorStore = create<EditorStore>((set) => ({
       uploadedImages: snapshot.uploadedImages,
       activeSnapshotId: snapshot.id,
     }),
+
+  setActiveSnapshotId: (id) => set({ activeSnapshotId: id }),
 
   clearActiveSnapshotId: () => set({ activeSnapshotId: null }),
 
