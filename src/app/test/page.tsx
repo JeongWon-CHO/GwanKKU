@@ -20,12 +20,20 @@ export default function TestIntroPage() {
           <span>약 1분 소요</span>
         </div>
 
-        <Link
-          href="/test/1"
-          className="rounded-full bg-accent px-8 py-3 text-sm font-medium text-accent-fg transition-opacity hover:opacity-80"
-        >
-          시작하기
-        </Link>
+        <div className="flex w-full max-w-xs flex-col gap-3">
+          <Link
+            href="/test/1"
+            className="rounded-full bg-accent px-8 py-3 text-center text-sm font-medium text-accent-fg transition-opacity hover:opacity-80"
+          >
+            시작하기
+          </Link>
+          <Link
+            href="/select"
+            className="rounded-full border border-line px-8 py-3 text-center text-sm text-body transition-opacity hover:opacity-70"
+          >
+            건너뛰고 바로 꾸미기
+          </Link>
+        </div>
       </div>
 
       <Link
